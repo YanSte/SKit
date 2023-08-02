@@ -1,0 +1,10 @@
+matplotlib
+numpy
+pandas
+ipython
+scikit-learn
+pyyaml
+nbformat
+nbconvert
+requests
+typing_extensions
