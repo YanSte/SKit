@@ -11,12 +11,19 @@ if IN_COLAB:
     except ImportError:
         print(f"Missing some imports: {ImportError}")
 
+    def install_kaggle():
+        subprocess.run(['pip', 'install', 'kaggle'])
+
+    def set_environ_kaggle_config(kaggle_config_dir):
+        gdrive_path = '/content/gdrive'
+        my_drive_path = f'{gdrive_path}/My Drive'
+        drive.mount(gdrive_path)
+        os.environ['KAGGLE_CONFIG_DIR'] = f"{my_drive_path}/{kaggle_config_dir}"
+
     def setup_kaggle_dataset(kaggle_dataset_url, kaggle_config_dir, run_dir):
         try:
-            !pip install kaggle
-
-            # Set Kaggle config directory
-            os.environ['KAGGLE_CONFIG_DIR'] = f"{my_drive_path}/{kaggle_config_dir}"
+            install_kaggle()
+            set_environ_kaggle_config(kaggle_config_dir)
 
             # Créer le répertoire Kaggle s'il n'existe pas
             os.makedirs(dataset_destination_path, exist_ok=True)
