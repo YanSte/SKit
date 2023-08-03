@@ -3,8 +3,12 @@ import shutil
 from tqdm import tqdm
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
+from smartkit.utils import rmdir
 from smartkit.config import IS_TENSORFLOW_IMPORTED
+
+# ==============================
+#           Images
+# ==============================
 
 def split_images_dataset(
     data_dir,
@@ -83,6 +87,10 @@ def split_images_dataset(
                 # Wait for all copying tasks to complete
                 for future in as_completed([future_train, future_val, future_test]):
                     future.result()
+
+# ==============================
+#           TensorFlow
+# ==============================
 
 if IS_TENSORFLOW_IMPORTED:
     import tensorflow as tf
