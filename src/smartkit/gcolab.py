@@ -1,15 +1,15 @@
+def check_imports():
+    try:
+        import subprocess
+        import shutil
+        import os
+        from google.colab import drive
 
-from google.colab import drive
-import subprocess  # Add this line to import the subprocess module
-import os
-
+    except ImportError:
+        print(f"Missing some imports: {ImportError}")
 
 def setup_kaggle_dataset(kaggle_dataset_url, kaggle_config_dir, run_dir):
-    try:
-        import google.colab
-        # Your code that uses google.colab goes here
-    except ImportError:
-        print("Optional Colab feature requires, please `pip install google-colab")
+    check_imports()
 
     try:
         gdrive_path = '/content/gdrive'
@@ -33,8 +33,8 @@ def setup_kaggle_dataset(kaggle_dataset_url, kaggle_config_dir, run_dir):
         subprocess.run(['kaggle', 'datasets', 'download', '-d', kaggle_dataset_url])
 
         # Unzip the downloaded files
-        subprocess.run(['unzip', '*.zip'], shell=True)
-        os.remove('*.zip')
+        subprocess.run(['unzip', '*.zip'], shell=True, check=True)
+        shutil.rmtree('*.zip')
 
         print("Dataset downloaded and unzipped successfully!")
 
