@@ -16,7 +16,9 @@ def split_images_dataset(
     classes,
     train_ratio=0.7,
     validation_ratio=0.15,
-    test_ratio=0.15
+    test_ratio=0.15,
+    shuffle_data=True,
+    seed=None
 ):
     """
     Splits images dataset into train, validation and test sets.
@@ -68,7 +70,10 @@ def split_images_dataset(
             all_file_names = os.listdir(src)
 
             # Shuffle the file names
-            np.random.shuffle(all_file_names)
+            if shuffle_data:
+                np.random.seed(seed)
+                np.random.shuffle(all_file_names)
+                np.random.seed(None)
 
             # Calculate the separation indices for training, validation and testing
             train_idx, val_idx = int(len(all_file_names) * train_ratio), int(len(all_file_names) * (train_ratio + validation_ratio))
@@ -87,6 +92,119 @@ def split_images_dataset(
                 # Wait for all copying tasks to complete
                 for future in as_completed([future_train, future_val, future_test]):
                     future.result()
+
+def save_h5_dataset(x_train, y_train, x_test, y_test, x_meta,y_meta, filename):
+    """
+    Save the datasets into an h5 file.
+
+    Parameters
+    ----------
+    x_train : numpy array
+        Training data features.
+    y_train : numpy array
+        Training data labels.
+    x_test : numpy array
+        Test data features.
+    y_test : numpy array
+        Test data labels.
+    x_meta : numpy array
+        Metadata of the dataset for training.
+    y_meta : numpy array
+        Metadata of the dataset for testing.
+    filename : str
+        The name of the h5 file to be created and saved.
+    """
+    # Create h5 file
+    # ----
+    with h5py.File(filename, "w") as f:
+        f.create_dataset("x_train", data=x_train)
+        f.create_dataset("y_train", data=y_train)
+        f.create_dataset("x_test",  data=x_test)
+        f.create_dataset("y_test",  data=y_test)
+        f.create_dataset("x_meta",  data=x_meta)
+        f.create_dataset("y_meta",  data=y_meta)
+
+    # Print
+    # ----
+    size=os.path.getsize(filename)/(1024*1024)
+    print('Dataset : {:24s}  shape : {:22s} size : {:6.1f} Mo   (saved)'.format(filename, str(x_train.shape),size))
+
+def read_dataset(enhanced_dir, dataset_name):
+    """
+    Read an h5 dataset.
+
+    Parameters
+    ----------
+    enhanced_dir : str
+        Directory containing the h5 dataset.
+    dataset_name : str
+        Name of the h5 dataset.
+
+    Returns
+    -------
+    x_train : numpy array
+        Training data features.
+    y_train : numpy array
+        Training data labels.
+    x_test : numpy array
+        Test data features.
+    y_test : numpy array
+        Test data labels.
+    size : float
+        Size of the h5 file in MB.
+    """
+    # ---- Read dataset
+    filename = f'{enhanced_dir}/{dataset_name}.h5'
+    size     = os.path.getsize(filename)/(1024*1024)
+
+    with  h5py.File(filename,'r') as f:
+        x_train = f['x_train'][:]
+        y_train = f['y_train'][:]
+        x_test  = f['x_test'][:]
+        y_test  = f['y_test'][:]
+
+    # ---- Shuffle
+    x_train,y_train=shuffle_np_dataset(x_train,y_train)
+
+    # ---- done
+    return x_train,y_train,x_test,y_test,size
+
+def shuffle_np_dataset(*data):
+    """
+    Shuffle numpy arrays in the same random order.
+
+    Parameters
+    ----------
+    *data : numpy arrays
+        Arrays to be shuffled.
+
+    Returns
+    -------
+    numpy arrays
+        Shuffled arrays in the same random order.
+    """
+    p = np.random.permutation(len(data[0]))
+    out = [ d[p] for d in data ]
+    return out[0] if len(out)==1 else out
+
+def rescale_dataset(*data, scale=1):
+    """
+    Rescale numpy arrays with a scale factor.
+
+    Parameters
+    ----------
+    *data : numpy arrays
+        Arrays to be rescaled.
+    scale : float, optional
+        Scale factor to adjust the size of the arrays.
+
+    Returns
+    -------
+    numpy arrays
+        Rescaled arrays.
+    """
+    out = [ d[:int(scale*len(d))] for d in data ]
+    return out[0] if len(out)==1 else out
 
 # ==============================
 #           TensorFlow
