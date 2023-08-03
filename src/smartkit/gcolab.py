@@ -25,7 +25,7 @@ def setup_kaggle_dataset(kaggle_dataset_url, kaggle_config_dir, run_dir):
         os.makedirs(full_run_dir)
 
     # Change to the Kaggle directory
-    %cd /content/gdrive/My Drive/{run_dir}
+    os.chdir(full_run_dir)
 
     # Download the dataset using Kaggle CLI
     !kaggle datasets download -d {kaggle_dataset_url}
