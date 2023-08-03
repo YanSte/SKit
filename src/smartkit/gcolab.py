@@ -28,7 +28,8 @@ def setup_kaggle_dataset(kaggle_dataset_url, kaggle_config_dir, run_dir):
     os.chdir(full_run_dir)
 
     # Download the dataset using Kaggle CLI
-    !kaggle datasets download -d {kaggle_dataset_url}
+    subprocess.run(['kaggle', 'datasets', 'download', '-d', kaggle_dataset_url])
 
     # Unzip the downloaded files
-    !unzip \*.zip && rm *.zip
+    subprocess.run(['unzip', '*.zip'], shell=True)
+    os.remove('*.zip')
