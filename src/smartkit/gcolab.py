@@ -3,13 +3,16 @@ def check_imports():
         import subprocess
         import shutil
         import os
-        from google.colab import drive
+        import google.colab
 
     except ImportError:
-        print(f"Missing some imports: {ImportError}")
+        print(f"Optional Module, Missing some imports: {ImportError}")
 
 def setup_kaggle_dataset(kaggle_dataset_url, kaggle_config_dir, run_dir):
+    # Imports
     check_imports()
+
+    from google.colab import drive
 
     try:
         gdrive_path = '/content/gdrive'
