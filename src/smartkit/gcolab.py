@@ -53,7 +53,7 @@ if IN_COLAB:
 
     def setup_kaggle_dataset(
         kaggle_dataset_url,
-        dataset_destination_path,
+        dataset_destination_path = '/content',
         mountpoint_gdrive_path = '/content',
         kaggle_config_dir = 'Kaggle'
     ):
