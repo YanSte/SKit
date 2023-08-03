@@ -1,11 +1,12 @@
-from config import IN_COLAB
-from utils import mkdir
+from smartkit.config import IN_COLAB
+from smartkit.utils import mkdir
 
 if IN_COLAB:
     try:
         import subprocess
         import shutil
         import os
+        import glob
         import google.colab
         from google.colab import drive
 
