@@ -85,6 +85,8 @@ def split_images_dataset(
                     future.result()
 
 if IS_TENSORFLOW_IMPORTED:
+    import tensorflow as tf
+
     def convert_tf_dataset_to_xy(dataset, labels):
         """
         Extracts image data and corresponding labels from a given TensorFlow dataset.

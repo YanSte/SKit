@@ -3,7 +3,7 @@ from PIL import Image
 from tqdm import tqdm
 import concurrent.futures
 import numpy as np
-
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def average_image_size(
     dataset_path,
