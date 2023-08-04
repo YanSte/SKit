@@ -2,6 +2,7 @@ import os
 import shutil
 from tqdm import tqdm
 import numpy as np
+import h5py
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from smartkit.utils import rmdir
 from smartkit.config import IS_TENSORFLOW_IMPORTED
