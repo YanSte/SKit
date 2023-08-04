@@ -2,7 +2,7 @@ import pandas as pd
 import time
 
 from IPython.display import display
-from smartkit.show import show_text
+from skit.show import show_text
 
 
 class ModelMetrics:

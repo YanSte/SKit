@@ -3,15 +3,15 @@
 
 # ---- Gobal import ----
 
-import smartkit.config as config
-from smartkit.ModelMetrics import ModelMetrics
+import skit.config as config
+from skit.ModelMetrics import ModelMetrics
 
 # TODO
 import argparse
 import logging
 import sys
 
-from smartkit import __version__
+from skit import __version__
 
 __author__ = "Yannick Stephan"
 __copyright__ = "Yannick Stephan"
@@ -23,7 +23,7 @@ _logger = logging.getLogger(__name__)
 # ---- Python API ----
 # The functions defined in this section can be imported by users in their
 # Python scripts/interactive interpreter, e.g. via
-# `from smartkit.skeleton import fib`,
+# `from skit.skeleton import fib`,
 # when using this Python module as a library.
 
 
@@ -63,7 +63,7 @@ def parse_args(args):
     parser.add_argument(
         "--version",
         action="version",
-        version=f"smartkit {__version__}",
+        version=f"skit {__version__}",
     )
     parser.add_argument(dest="n", help="n-th Fibonacci number", type=int, metavar="INT")
     parser.add_argument(

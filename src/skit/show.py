@@ -8,7 +8,7 @@ import pandas as pd
 
 from IPython.display import display,Image,Markdown,HTML
 
-#import smartkit.utils  as utils
+#import skit.utils  as utils
 
 # ---------------- #
 # Show

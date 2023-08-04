@@ -1,5 +1,5 @@
-from smartkit.config import IN_COLAB
-from smartkit.utils import mkdir
+from skit.config import IN_COLAB
+from skit.utils import mkdir
 
 if IN_COLAB:
     try:

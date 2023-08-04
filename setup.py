@@ -1,5 +1,5 @@
 """
-    Setup file for smartkit.
+    Setup file for skit.
     Use setup.cfg to configure your project.
 
     This file was generated with PyScaffold 4.5.

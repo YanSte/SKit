@@ -1,5 +1,5 @@
 Metadata-Version: 2.1
-Name: smartkit
+Name: skit
 Version: 0.0.post1.dev1+g08d0609.d20230802
 Summary: Module for the ML.
 Home-page: https://github.com/YanSteph
@@ -14,7 +14,7 @@ Description-Content-Type: text/markdown
 License-File: LICENSE.txt
 
 ========
-Smartkit
+skit
 ========
 
 Module for ML helpers.
