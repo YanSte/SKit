@@ -8,3 +8,4 @@ nbformat
 nbconvert
 requests
 typing_extensions
+h5py
