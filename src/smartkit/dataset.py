@@ -206,6 +206,8 @@ def rescale_dataset(*data, scale=1):
     out = [ d[:int(scale*len(d))] for d in data ]
     return out[0] if len(out)==1 else out
 
+
+
 # ==============================
 #           TensorFlow
 # ==============================
