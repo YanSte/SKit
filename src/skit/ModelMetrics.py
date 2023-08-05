@@ -94,7 +94,7 @@ class ModelMetrics:
             'board_path': self.output[version]['board_path'],
         }
 
-    def show_best_report(self):
+    def show_report(self):
         """
         Display a tabular report of the best model performance.
         """
@@ -169,7 +169,7 @@ class ModelMetrics:
             duration = time.time() - self.output[version]['duration']
             self.output[version]['duration'] = duration
 
-    def add_best_model_link(self, version, link):
+    def add_best_model_path(self, version, path):
         """
         Add the link of the best model for the specified model version.
 
@@ -180,9 +180,9 @@ class ModelMetrics:
         link : str
             The link or path to the best model.
         """
-        self.output[version]['best_model_path'] = link
+        self.output[version]['best_model_path'] = path
 
-    def add_board_path(self, version, link):
+    def add_board_path(self, version, path):
         """
         Add the link of the tensor board for the specified model version.
 
@@ -193,7 +193,7 @@ class ModelMetrics:
         link : str
             The link or path to the tensor board.
         """
-        self.output[version]['board_path'] = link
+        self.output[version]['board_path'] = path
 
     def add_history(self, version, history):
         """
