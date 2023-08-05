@@ -8,11 +8,11 @@ import pandas as pd
 
 from IPython.display import display,Image,Markdown,HTML
 
-#import skit.utils  as utils
+from skit.config import IS_TENSORFLOW_IMPORTED
 
-# ---------------- #
-# Show
-# ---------------- #
+# ==============================
+#           Show
+# ==============================
 
 def show_text(heading_level, text="", add_indent=True):
     '''
@@ -301,6 +301,9 @@ def show_confusion_matrix(
     plt.show()
 
 
+# ==============================
+#           TensorFlow
+# ==============================
 
 if IS_TENSORFLOW_IMPORTED:
     import tensorflow as tf
