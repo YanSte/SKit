@@ -308,8 +308,8 @@ if IS_TENSORFLOW_IMPORTED:
     def show_tf_images(
         dataset,
         indices="all",
-        columns=12,
-        figure_size=(1, 1)
+        columns=1,
+        figure_size=(1, 1),
         show_colorbar=False,
         pred=None,
         color_map='binary',
@@ -321,7 +321,12 @@ if IS_TENSORFLOW_IMPORTED:
     ):
         x = []
         y = []
-        dataset = dataset.take(columns)
+
+        dataset_size = dataset.cardinality().numpy()
+        if columns <= dataset_size:
+            dataset = dataset.take(columns)
+        else:
+            raise Exception(f"The columns is bigger than the dataset size: {dataset_size}.")
 
         for images, labels_mapping in dataset:
             x.extend(images.numpy())
@@ -331,14 +336,13 @@ if IS_TENSORFLOW_IMPORTED:
         y = [labels[i] for i in y]  # convert to class names
 
         batch_size = len(x)
-
         if indices == "all":
-            indices = range(0, len(x))
+            indices = range(0, batch_size)
         else:
             if indices <= len(x):
                 indices = range(0, indices)
             else:
-                raise Exception("The indices is bigger than batch of the dataset.")
+                raise Exception(f"The indices is bigger than batch size: {batch_size}.")
 
         show_images(
             x,
