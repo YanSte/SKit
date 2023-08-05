@@ -310,6 +310,7 @@ if IS_TENSORFLOW_IMPORTED:
 
     def show_tf_images(
         dataset,
+        labels="default", # default get from dataset
         indices="all",
         columns=1,
         figure_size=(1, 1),
@@ -322,6 +323,10 @@ if IS_TENSORFLOW_IMPORTED:
         font_size=20,
         interpolation='lanczos'
     ):
+        # Labels
+        # ----
+        if labels == "default":
+            labels = dataset.class_names
 
         # Columns size
         # ----
