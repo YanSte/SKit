@@ -299,3 +299,57 @@ def show_confusion_matrix(
     plt.ylabel('True label')
     plt.xlabel('Predicted label\naccuracy={:0.4f}; misclass={:0.4f}'.format(accuracy, misclass))
     plt.show()
+
+
+
+if IS_TENSORFLOW_IMPORTED:
+    import tensorflow as tf
+
+    def show_tf_images(
+        dataset,
+        indices="all",
+        columns=12,
+        figure_size=(1, 1)
+        show_colorbar=False,
+        pred=None,
+        color_map='binary',
+        normalization=None,
+        padding=0.35,
+        spines_alpha=1,
+        font_size=20,
+        interpolation='lanczos'
+    ):
+        x = []
+        y = []
+        dataset = dataset.take(columns)
+
+        for images, labels_mapping in dataset:
+            x.extend(images.numpy())
+            y.extend(np.argmax(labels_mapping.numpy(), axis=1))  # get class numbers
+
+        x = np.array(x)
+        y = [labels[i] for i in y]  # convert to class names
+
+        batch_size = len(x)
+
+        if indices == "all":
+            indices = range(0, len(x))
+        else:
+            if indices <= len(x):
+                indices = range(0, indices)
+            else:
+                raise Exception("The indices is bigger than batch of the dataset.")
+
+        show_images(
+            x,
+            y,
+            figure_size=(3, 3),
+            indices=indices,
+            show_colorbar=show_colorbar,
+            pred=pred
+            color_map=color_map,
+            padding=padding,
+            spines_alpha=spines_alpha,
+            font_size=font_size,
+            interpolation=interpolation
+        )
