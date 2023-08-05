@@ -308,7 +308,7 @@ def show_confusion_matrix(
 if IS_TENSORFLOW_IMPORTED:
     import tensorflow as tf
 
-    def show_tf_images(
+    def tf_show_images(
         dataset,
         labels="default", # default get from dataset
         indices="all",
@@ -326,7 +326,16 @@ if IS_TENSORFLOW_IMPORTED:
         # Labels
         # ----
         if labels == "default":
-            labels = dataset.class_names
+            try:
+                class_names = dataset.class_names
+            except AttributeError:
+                raise Exception(
+                    f"""
+                    The provided dataset of type {type(dataset)} does not have a 'class_names' attribute.
+                    This usually occurs when the dataset is not a 'BatchDataset' or a dataset preprocessed by certain high-level APIs.
+                    If you are using a custom dataset type, please specify the 'labels' argument.
+                    """
+                )
 
         # Columns size
         # ----

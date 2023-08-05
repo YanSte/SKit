@@ -5,6 +5,7 @@ import numpy as np
 import h5py
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from skit.utils import rmdir
+
 from skit.config import IS_TENSORFLOW_IMPORTED
 
 # ==============================
@@ -206,42 +207,3 @@ def rescale_dataset(*data, scale=1):
     """
     out = [ d[:int(scale*len(d))] for d in data ]
     return out[0] if len(out)==1 else out
-
-
-
-# ==============================
-#           TensorFlow
-# ==============================
-
-if IS_TENSORFLOW_IMPORTED:
-    import tensorflow as tf
-
-    def convert_tf_dataset_to_xy(dataset, labels):
-        """
-        Extracts image data and corresponding labels from a given TensorFlow dataset.
-
-        Parameters:
-        dataset : tf.data.Dataset
-            The dataset from which image data and labels are to be extracted.
-        class_mapping : list
-            A list where the index corresponds to the label and the value is the class name.
-
-        Returns:
-        tuple : (image_data, class_labels)
-            image_data : np.array
-                An array of image data.
-            class_labels : list
-                A list of class names corresponding to the labels in the dataset.
-        """
-        # Conversion du dataset en une liste d'images et de labels
-        x = []
-        y = []
-
-        for images, labels_mapping in dataset:
-            x.extend(images.numpy())
-            y.extend(np.argmax(labels_mapping.numpy(), axis=1))  # get class numbers
-
-        x = np.array(x)
-        y = [labels[i] for i in y]  # convert to class names
-
-        return x, y
