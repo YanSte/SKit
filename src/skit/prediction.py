@@ -47,7 +47,7 @@ if IS_TENSORFLOW_IMPORTED:
         # Num take
         # ----
         if num_take != 'all':
-          try
+          try:
             dataset = dataset.take(num_take)
           else:
             dataset_size = dataset.cardinality().numpy()

@@ -3,7 +3,7 @@ import numpy as np
 import time
 
 from IPython.display import display
-from skit.show import show_text
+from skit.show import show_text, show_history
 
 class ModelMetrics:
     def __init__(self, versions):
