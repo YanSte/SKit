@@ -1,6 +1,6 @@
 import pytest
 
-from skit.skeleton import fib, main
+from skit.main import fib, main
 
 __author__ = "Yannick Stephan"
 __copyright__ = "Yannick Stephan"
