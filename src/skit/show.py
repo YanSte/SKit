@@ -319,14 +319,20 @@ if IS_TENSORFLOW_IMPORTED:
         font_size=20,
         interpolation='lanczos'
     ):
-        x = []
-        y = []
 
+        # Columns size
+        # ----
         dataset_size = dataset.cardinality().numpy()
+
         if columns <= dataset_size:
             dataset = dataset.take(columns)
         else:
             raise Exception(f"The columns is bigger than the dataset size: {dataset_size}.")
+
+        # Setup x y
+        # ----
+        x = []
+        y = []
 
         for images, labels_mapping in dataset:
             x.extend(images.numpy())
@@ -335,6 +341,8 @@ if IS_TENSORFLOW_IMPORTED:
         x = np.array(x)
         y = [labels[i] for i in y]  # convert to class names
 
+        # Row size
+        # ----
         batch_size = len(x)
         if indices == "all":
             indices = range(0, batch_size)
@@ -344,13 +352,15 @@ if IS_TENSORFLOW_IMPORTED:
             else:
                 raise Exception(f"The indices is bigger than batch size: {batch_size}.")
 
+        # Show
+        # ----
         show_images(
             x,
             y,
             figure_size=(3, 3),
             indices=indices,
             show_colorbar=show_colorbar,
-            pred=pred
+            y_pred=pred,
             color_map=color_map,
             padding=padding,
             spines_alpha=spines_alpha,
