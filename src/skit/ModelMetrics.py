@@ -1,9 +1,9 @@
 import pandas as pd
+import numpy as np
 import time
 
 from IPython.display import display
 from skit.show import show_text
-
 
 class ModelMetrics:
     def __init__(self, versions):
@@ -18,66 +18,132 @@ class ModelMetrics:
         self.output = {}
         for version in versions:
             self.output[version] = {
-                "accuracy":        None,
+                "history":         None,
                 "duration":        None,
                 "best_model_path": None,
                 "board_path":      None
             }
 
-    def reset(self):
-        self.output = {}
-        for version in versions:
-            self.output[version] = {
-                "accuracy":        None,
-                "duration":        None,
-                "best_model_path": None,
-                "board_path":      None
+    def reset(self, version=None):
+        default_dict = {
+            "history":         None,
+            "duration":        None,
+            "best_model_path": None,
+            "board_path":      None
             }
 
-    def show_report(self):
+        if version is not None:
+            self.output[version] = default_dict
+        else:
+            # Reset all versions
+            for version in self.output.keys():
+                self.output[version] = default_dict.copy()
+
+    def get_best_accuracy(self, version):
         """
-        Display a tabular report of the model performance.
+        Get the best training and validation accuracy for the specified model version.
+
+        Parameters
+        ----------
+        version : str
+            The name of the model version for which to get the accuracy score.
+
+        Returns
+        -------
+        dict
+            A dictionary containing the best training and validation accuracy.
         """
-        # Convert the output dictionary to a DataFrame
-        df = pd.DataFrame.from_dict(self.output, orient='index')
+        history = self.output[version]['history']
 
-        # Convert the 'accuracy' and 'duration' columns to numeric (float) data types
-        df['accuracy'] = df['accuracy'].astype(float)
-        df['duration'] = df['duration'].astype(float)
+        # Find the index of the best validation accuracy
+        best_val_index = np.argmax(history.history['val_accuracy'])
 
-        # Sort the DataFrame by accuracy in descending order to find the best model
-        df_sorted = df.sort_values(by='accuracy', ascending=False)
+        # Get the training accuracy at the epoch of the best validation accuracy
+        best_train_accuracy = history.history['accuracy'][best_val_index]
 
-        # Highlight the best accuracy cell
-        df_styled = df_sorted.style.apply(lambda x: ['background: yellow' if x.name == df_sorted.index[0] and col == 'accuracy' else '' for col in x], axis=1)
+        # Get the best validation accuracy
+        best_val_accuracy = history.history['val_accuracy'][best_val_index]
 
-        # Format the accuracy and duration columns to display with two decimal places
-        df['accuracy'] = df['accuracy'].map("{:.2f}".format)
-        df['duration'] = df['duration'].map("{:.2f}".format)
+        return {
+            'best_train_accuracy': best_train_accuracy,
+            'best_val_accuracy': best_val_accuracy,
+        }
+
+    def get_best_report(self, version):
+        """
+        Get the best report for the specified model version.
+
+        Parameters
+        ----------
+        version : str
+            The name of the model version for which to get the accuracy score.
+
+        Returns
+        -------
+        pandas.DataFrame
+            A dictionary containing the best report.
+        """
+        metrics = self.get_best_accuracy(version)
+
+        return {
+            'version': version,
+            'best_train_accuracy': metrics['best_train_accuracy'],
+            'best_val_accuracy': metrics['best_val_accuracy'],
+            'duration': self.output[version]['duration'],
+            'best_model_path': self.output[version]['best_model_path'],
+            'board_path': self.output[version]['board_path'],
+        }
+
+    def show_best_report(self):
+        """
+        Display a tabular report of the best model performance.
+        """
+        # Initialize the report DataFrame
+        df = pd.DataFrame(columns=['version', 'best_train_accuracy', 'best_val_accuracy', 'duration', 'best_model_path', 'board_path'])
+
+        for version in self.output.keys():
+            # Get the best training and validation accuracy for this version
+            report = self.get_best_report(version)
+
+            # Add the data to the DataFrame
+            df = df.append(report, ignore_index=True)
+
+        # Set 'version' as the index of the DataFrame
+        df.set_index('version', inplace=True)
+
+        # Apply formatting to the duration and accuracy columns
+        df['duration'] = df['duration'].apply(lambda x: "{:.2f}".format(x))
+        df[['best_train_accuracy', 'best_val_accuracy']] = df[['best_train_accuracy', 'best_val_accuracy']].applymap(lambda x: "{:.2f}%".format(x*100))
+
+        # Highlight the maximum in the 'best_val_accuracy' column
+        styled_df = df.style.highlight_max(subset=['best_val_accuracy'], color='lightgreen')
 
         # Display the report
-        display(df_styled)
+        display(styled_df)
 
-    def show_result(self, version):
+    def show_best_result(self, version):
         """
-        Display the result (accuracy and duration) for a specific model version.
+        Display the result (best train accuracy, best validation accuracy and duration) for a specific model version.
 
         Parameters
         ----------
         version : str
             The model version for which the result will be displayed.
         """
-        result = self.output.get(version, None)
+        result = self.get_best_report(version)
+
         if result is not None:
-            accuracy = result.get('accuracy', None)
+            best_train_accuracy = result.get('best_train_accuracy', None)
+            best_val_accuracy = result.get('best_val_accuracy', None)
             duration = result.get('duration', None)
 
-            if accuracy is not None and duration is not None:
-                show_text("b", f"Accuracy = {accuracy:.2f} & Duration = {duration:.2f}")
+            if best_train_accuracy is not None and best_val_accuracy is not None and duration is not None:
+                show_text("b", f"Train Accuracy = {best_train_accuracy * 100:.2f}% - Validation Accuracy = {best_val_accuracy * 100:.2f}% - Duration = {duration:.2f}")
             else:
                 show_text("b", f"Result not available for version {version}")
         else:
             show_text("b", f"Version {version} not found in the output")
+
 
     def start_timer(self, version):
         """
@@ -129,18 +195,27 @@ class ModelMetrics:
         """
         self.output[version]['board_path'] = link
 
-    def add_accuracy(self, version, accuracy):
+    def add_history(self, version, history):
         """
-        Add the accuracy score for the specified model version.
+        Add the history of the specified model version.
 
         Parameters
         ----------
         version : str
             The name of the model version for which to add the accuracy score.
-        accuracy : float
+        history : dict
             The accuracy score to be added.
         """
-        self.output[version]['accuracy'] = accuracy
+        self.output[version]['history'] = history.history
+
+    def show_history(
+        self,
+        version,
+        figsize=(8,6),
+        plot = {"Accuracy":['accuracy','val_accuracy'], 'Loss':['loss', 'val_loss']}
+    ):
+        history = self.output[version]['history']
+        display(show_history(history figsize = figsize, plot = plot))
 
     def get_best_model_path(self):
         """
