@@ -47,11 +47,11 @@ if IS_TENSORFLOW_IMPORTED:
         # Num take
         # ----
         if num_take != 'all':
-          try:
-            dataset = dataset.take(num_take)
-          else:
             dataset_size = dataset.cardinality().numpy()
-            raise Exception(f"The num_take is bigger than the dataset size: {dataset_size}.")
+            if num_take > dataset_size:
+                raise Exception(f"The num_take is bigger than the dataset size: {dataset_size}.")
+            else:
+                dataset = dataset.take(num_take)
 
         for images, true_label in dataset:
             # Get feature
