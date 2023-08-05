@@ -215,7 +215,7 @@ class ModelMetrics:
         plot = {"Accuracy":['accuracy','val_accuracy'], 'Loss':['loss', 'val_loss']}
     ):
         history = self.output[version]['history']
-        display(show_history(history figsize = figsize, plot = plot))
+        display(show_history(history, figsize = figsize, plot = plot))
 
     def get_best_model_path(self):
         """
@@ -231,7 +231,7 @@ class ModelMetrics:
         best_model_path = None
 
         for version, metrics in self.output.items():
-            accuracy = metrics.get('accuracy', None)
+            accuracy = self.get_best_accuracy(version).get('best_val_accuracy', None)
             model_path = metrics.get('best_model_path', None)
 
             if accuracy is not None and model_path is not None and accuracy > best_accuracy:
