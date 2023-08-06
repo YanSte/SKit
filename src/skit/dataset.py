@@ -42,6 +42,9 @@ def split_images_dataset(
     test_ratio : float, optional
         Ratio of images to be used for testing.
     """
+    if train_ratio + validation_ratio + test_ratio != 1:
+        raise ValueError("The sum of the ratios must be 1")
+
     # Function to copy files in parallel
     def copy_files(src_path, dest_path, file_names, pbar):
         for file_name in file_names:
@@ -55,6 +58,8 @@ def split_images_dataset(
     total_files = 0
     for cls in classes:
         total_files += len(os.listdir(os.path.join(data_dir, cls)))
+
+    np.random.seed(seed)
 
     with tqdm(total=total_files, desc="Spliting into train, validation and test sets", unit="file") as pbar:
         for cls in classes:
@@ -73,9 +78,7 @@ def split_images_dataset(
 
             # Shuffle the file names
             if shuffle_data:
-                np.random.seed(seed)
                 np.random.shuffle(all_file_names)
-                np.random.seed(None)
 
             # Calculate the separation indices for training, validation and testing
             train_idx, val_idx = int(len(all_file_names) * train_ratio), int(len(all_file_names) * (train_ratio + validation_ratio))
@@ -94,6 +97,8 @@ def split_images_dataset(
                 # Wait for all copying tasks to complete
                 for future in as_completed([future_train, future_val, future_test]):
                     future.result()
+
+    np.random.seed(None)
 
 def save_h5_dataset(x_train, y_train, x_test, y_test, x_meta,y_meta, filename):
     """
