@@ -61,13 +61,14 @@ if IS_TENSORFLOW_IMPORTED:
             true_labels_list = [labels[idx] for idx in true_indices]
             y_test.extend(true_labels_list)
 
+            # Predict
+            # ----
             predictions = model.predict(images, verbose=verbosity)
 
-            for pred in predictions:
-                # Get predicted label
-                # ----
-                predicted_indices = np.argmax(pred, axis=1)
-                predicted_labels = [labels[idx] for idx in predicted_indices]
-                y_pred.extend(predicted_labels)
+            # Get predicted labels
+            # ----
+            predicted_indices = np.argmax(predictions, axis=1)
+            predicted_labels = [labels[idx] for idx in predicted_indices]
+            y_pred.extend(predicted_labels)
 
         return x_test, y_test, y_pred
