@@ -53,25 +53,21 @@ if IS_TENSORFLOW_IMPORTED:
 
         # Setup returns
         # ----
+    
+        test_steps_per_epoch = np.math.ceil(dataset.samples / dataset.batch_size)
+
+        predictions = model.predict_generator(dataset, steps=test_steps_per_epoch)
+        # Get most likely class
+        predicted_classes = np.argmax(predictions, axis=1)
+
+        true_classes = model.classes
+
         x_test = []
-        y_test = []
-        y_pred = []
 
         for images, true_labels in dataset:
             # Get feature
             # ----
-            x_test.extend(images.numpy())
+            x_test.append(images.numpy())
 
-            # Get true label
-            # ----
-            y_test.extend(labels[idx] for idx in np.argmax(true_labels.numpy(), axis=1))
 
-            # Predict
-            # ----
-            predictions = model.predict(images, verbose=verbosity)
-
-            # Get predicted labels
-            # ----
-            y_pred.extend(labels[idx] for idx in np.argmax(predictions, axis=1))
-
-        return x_test, y_test, y_pred
+        return x_test, true_classes, predicted_classes

@@ -5,7 +5,8 @@ README.md
 pyproject.toml
 setup.cfg
 setup.py
-.github/release.yml
+.github/workflows/python-app.yml
+.github/workflows/release.yml
 src/skit/ModelMetrics.py
 src/skit/__init__.py
 src/skit/config.py
@@ -13,6 +14,7 @@ src/skit/dataset.py
 src/skit/gcolab.py
 src/skit/image.py
 src/skit/main.py
+src/skit/prediction.py
 src/skit/show.py
 src/skit/utils.py
 src/skit.egg-info/PKG-INFO
