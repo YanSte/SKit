@@ -56,13 +56,13 @@ class ModelMetrics:
         history = self.output[version]['history']
 
         # Find the index of the best validation accuracy
-        best_val_index = np.argmax(history.history['val_accuracy'])
+        best_val_index = np.argmax(history['val_accuracy'])
 
         # Get the training accuracy at the epoch of the best validation accuracy
-        best_train_accuracy = history.history['accuracy'][best_val_index]
+        best_train_accuracy = history['accuracy'][best_val_index]
 
         # Get the best validation accuracy
-        best_val_accuracy = history.history['val_accuracy'][best_val_index]
+        best_val_accuracy = history['val_accuracy'][best_val_index]
 
         return {
             'best_train_accuracy': best_train_accuracy,
