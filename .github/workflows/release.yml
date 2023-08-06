@@ -1,11 +1,12 @@
-name: Create Python Package
+name: Simple Workflow
 
 on:
-  release:
-    types: [created]
+  push:
+    branches:
+      - main
 
 jobs:
-  package:
+  build:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
@@ -16,11 +17,5 @@ jobs:
       with:
         python-version: 3.8
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install setuptools wheel
-
-    - name: Build package
-      run: |
-        python setup.py sdist bdist_wheel
+    - name: Print a message
+      run: echo "The workflow has been triggered!"
