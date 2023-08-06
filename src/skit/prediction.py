@@ -32,9 +32,6 @@ if IS_TENSORFLOW_IMPORTED:
             - y_test (list): The actual labels of the test data.
             - y_pred (list): The predicted labels.
         """
-        if not isinstance(dataset, tf.data.Dataset) == False:
-          raise Exception("The dataset is not a 'tf.data.Dataset' instance.")
-
         x_test = []
         y_test = []
         y_pred = []

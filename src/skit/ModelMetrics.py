@@ -53,7 +53,7 @@ class ModelMetrics:
         dict
             A dictionary containing the best training and validation accuracy.
         """
-        history = self.output[version]['history']
+        history = self.output[version]['history'].history
 
         # Find the index of the best validation accuracy
         best_val_index = np.argmax(history['val_accuracy'])
@@ -206,7 +206,7 @@ class ModelMetrics:
         history : dict
             The accuracy score to be added.
         """
-        self.output[version]['history'] = history.history
+        self.output[version]['history'] = history
 
     def show_history(
         self,
