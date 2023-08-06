@@ -106,7 +106,7 @@ class ModelMetrics:
             report = self.get_best_report(version)
 
             # Add the data to the DataFrame
-            df = df.append(report, ignore_index=True)
+            df = pd.concat([df, pd.DataFrame([report])], ignore_index=True)
 
         # Set 'version' as the index of the DataFrame
         df.set_index('version', inplace=True)

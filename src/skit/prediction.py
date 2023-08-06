@@ -50,24 +50,24 @@ if IS_TENSORFLOW_IMPORTED:
             else:
                 dataset = dataset.take(num_take)
 
-        for images, true_label in dataset:
+        for images, true_labels in dataset:
             # Get feature
             # ----
             x_test.extend(images.numpy())
 
             # Get true label
             # ----
-            true_label_scalar = true_label.numpy()
-            true_index = np.where(true_label_scalar == 1)[0][0]
-            y_test.append(labels[true_index])
+            true_indices = np.argmax(true_labels.numpy(), axis=1)
+            true_labels_list = [labels[idx] for idx in true_indices]
+            y_test.extend(true_labels_list)
 
             predictions = model.predict(images, verbose=verbosity)
 
             for pred in predictions:
                 # Get predicted label
                 # ----
-                predicted_score = tf.nn.softmax(pred)
-                predicted_label = labels[np.argmax(predicted_score)]
-                y_pred.append(predicted_label)
+                predicted_indices = np.argmax(pred, axis=1)
+                predicted_labels = [labels[idx] for idx in predicted_indices]
+                y_pred.extend(predicted_labels)
 
         return x_test, y_test, y_pred
