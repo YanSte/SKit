@@ -214,7 +214,7 @@ class ModelMetrics:
         figsize=(8,6)
     ):
         history = self.output[version]['history']
-        display(show_history(history, figsize = figsize, plot = plot))
+        display(show_history(history, figsize = figsize))
 
     def get_best_model_path(self):
         """

@@ -1,5 +1,5 @@
 import numpy as np
-
+from tqdm import tqdm
 from skit.config import IS_TENSORFLOW_IMPORTED
 
 # ==============================
@@ -9,7 +9,7 @@ from skit.config import IS_TENSORFLOW_IMPORTED
 if IS_TENSORFLOW_IMPORTED:
     import tensorflow as tf
 
-    def tf_predictions(dataset, model, num_take='all'):
+    def tf_predictions(dataset, model, labels, with_x_test=False, loss_type="categorical_crossentropy", verbosity=0):
         """
         Generates predictions on a provided TensorFlow dataset using the given model.
 
@@ -53,32 +53,31 @@ if IS_TENSORFLOW_IMPORTED:
         if not isinstance(dataset, tf.data.Dataset):
             raise ValueError("The provided dataset is not an instance of tf.data.Dataset.")
 
-        # Num take
-        # ----
-        if num_take != 'all':
-            dataset_size = dataset.cardinality().numpy()
-            if num_take > dataset_size:
-                raise Exception(f"The num_take is bigger than the dataset size: {dataset_size}.")
-            else:
-                dataset = dataset.take(num_take)
-
         # Extraire x_test et y_test du tf.data.Dataset
-        x_test = []
+        x_test = [] if with_x_test else None
         y_test = []
         y_pred = []
+        try:
+            for data, label in tqdm(dataset, desc="Predicting", unit="batch"):
+                if with_x_test:
+                    x_test.append(data)
 
-        for data, label in dataset.as_numpy_iterator():
-            x_test.append(data)
-            y_test.append(label)
+                y_test.append(label)
 
-            predictions = model.predict_on_batch(data).flatten()
-            y_pred.append(predictions)
+                predictions = model.predict(data, verbose=verbosity)
+                y_pred.append(predictions)
 
-        x_test = np.concatenate(x_test, axis=0)
-        y_test = np.concatenate(y_test, axis=0)
-        y_pred = np.concatenate(y_pred, axis=0)
+            y_test = np.concatenate(y_test, axis=0)
+            y_pred = np.concatenate(y_pred, axis=0)
 
-        return x_test, y_test, y_pred
+            y_test, y_pred = tf_convert_predictions_to_labels(y_test, y_pred, labels)
+        except MemoryError:
+            raise MemoryError("Memory exceeded while processing data. Consider processing a smaller dataset with take.")
+
+        if with_x_test:
+            return x_test, y_test, y_pred
+        else:
+            return y_test, y_pred
 
     def tf_convert_predictions_to_labels(y_test, y_pred, class_labels, loss_type="categorical_crossentropy"):
         """

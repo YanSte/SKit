@@ -100,14 +100,13 @@ def show_history(
             }
     )
     """
-    for title,curves in plot.items():
+    for title, curves in plot.items():
         plt.figure(figsize=figsize)
         plt.title(title)
 
         # Extracting the name from the first metric and capitalizing the first letter for ylabel
         y_label = list(curves.values())[0].capitalize()
         plt.ylabel(y_label)
-
         plt.xlabel('Epoch')
 
         for curve_label, metric_name in curves.items():
