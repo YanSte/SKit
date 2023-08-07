@@ -9,65 +9,116 @@ from skit.config import IS_TENSORFLOW_IMPORTED
 if IS_TENSORFLOW_IMPORTED:
     import tensorflow as tf
 
-    def tf_predictions(dataset, model, num_take='all', labels='default', verbosity=0):
+    def tf_predictions(dataset, model, num_take='all'):
         """
-        Makes predictions using a TensorFlow model on a given dataset and returns the test data,
-        test labels and predicted labels.
+        Generates predictions on a provided TensorFlow dataset using the given model.
 
         Parameters:
-        - dataset (tf.data.Dataset): The dataset to make predictions on. Must be an instance of tf.data.Dataset.
-        - model (tf.keras.Model): The model to use for making predictions.
-        - num_take (int or str, optional): The number of data points to take from the dataset for making predictions. If 'all', all data points will be used. Defaults to 'all'.
-        - labels (list or str, optional): The list of class names. If 'default', will try to use dataset.class_names. Defaults to 'default'.
-        - verbosity (int, optional): Verbosity mode, 0 or 1. Defaults to 0.
+        -----------
+        dataset : tf.data.Dataset
+            The input dataset for which predictions are required. This should contain data samples and their corresponding labels.
 
-        Raises:
-        - Exception: If the dataset is not a tf.data.Dataset instance.
-        - Exception: If num_take is not 'all' and is larger than the size of the dataset.
-        - Exception: If labels is 'default' but class names cannot be obtained from the dataset.
+        model : tf.keras.Model
+            The TensorFlow model to be used for generating predictions.
+
+        num_take : int or 'all', optional
+            Number of samples from the dataset on which predictions are to be made. If set to 'all', predictions will be generated for the entire dataset. Defaults to 'all'.
 
         Returns:
-        - tuple: (x_test, y_test, y_pred) where
-            - x_test (list): The test data used for making predictions.
-            - y_test (list): The actual labels of the test data.
-            - y_pred (list): The predicted labels.
+        --------
+        tuple of numpy.ndarray
+            Three arrays are returned:
+            - The first array contains the input data samples.
+            - The second array contains the true labels.
+            - The third array contains the predicted values from the model.
+
+        Raises:
+        -------
+        ValueError:
+            If the input 'dataset' is not an instance of tf.data.Dataset.
+
+        Exception:
+            If the value of 'num_take' is greater than the number of samples available in the dataset.
+
+        Notes:
+        ------
+        This function assumes that the input dataset is already batched. If the dataset contains very large images or is not batched, the function might consume a large amount of memory.
+
+        Example:
+        --------
+        >>> dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test)).batch(32)
+        >>> model = tf.keras.models.load_model('path_to_model.h5')
+        >>> x, y_true, y_pred = tf_predictions(dataset, model)
         """
         if not isinstance(dataset, tf.data.Dataset):
             raise ValueError("The provided dataset is not an instance of tf.data.Dataset.")
-
-        # Labels
-        # ----
-        if labels == "default":
-            try:
-                labels = dataset.class_names
-            except AttributeError:
-                raise AttributeError("The dataset does not have an attribute 'class_names'. Please provide explicit labels.")
 
         # Num take
         # ----
         if num_take != 'all':
             dataset_size = dataset.cardinality().numpy()
             if num_take > dataset_size:
-                raise ValueError(f"The value of num_take ({num_take}) exceeds the dataset size: {dataset_size}.")
-            dataset = dataset.take(num_take)
+                raise Exception(f"The num_take is bigger than the dataset size: {dataset_size}.")
+            else:
+                dataset = dataset.take(num_take)
 
-        # Setup returns
-        # ----
-    
-        test_steps_per_epoch = np.math.ceil(dataset.samples / dataset.batch_size)
-
-        predictions = model.predict_generator(dataset, steps=test_steps_per_epoch)
-        # Get most likely class
-        predicted_classes = np.argmax(predictions, axis=1)
-
-        true_classes = model.classes
-
+        # Extraire x_test et y_test du tf.data.Dataset
         x_test = []
+        y_test = []
+        y_pred = []
 
-        for images, true_labels in dataset:
-            # Get feature
-            # ----
-            x_test.append(images.numpy())
+        for data, label in dataset.as_numpy_iterator():
+            x_test.append(data)
+            y_test.append(label)
 
+            predictions = model.predict_on_batch(data).flatten()
+            y_pred.append(predictions)
 
-        return x_test, true_classes, predicted_classes
+        x_test = np.concatenate(x_test, axis=0)
+        y_test = np.concatenate(y_test, axis=0)
+        y_pred = np.concatenate(y_pred, axis=0)
+
+        return x_test, y_test, y_pred
+
+    def tf_convert_predictions_to_labels(y_test, y_pred, class_labels, loss_type="categorical_crossentropy"):
+        """
+        Converts y_test and predicted probabilities in y_pred_values to their corresponding class labels.
+
+        Parameters:
+        -----------
+        y_test : numpy.ndarray
+            Array of true class labels. One-hot encoded for 'categorical_crossentropy' and integer-encoded for 'sparse_categorical_crossentropy'.
+
+        y_pred : numpy.ndarray
+            Array of predicted class probabilities. This can be obtained from a model's prediction output.
+
+        class_labels : list of str
+            List of class labels where the index of each label corresponds to its class index.
+
+        loss_type : str, optional
+            Type of loss used in the model. Either 'categorical_crossentropy' or 'sparse_categorical_crossentropy'. Defaults to 'categorical_crossentropy'.
+
+        Returns:
+        --------
+        tuple of list of str
+            Two lists are returned:
+            - The first list contains the true class labels.
+            - The second list contains the predicted class labels based on the max probability.
+
+        Example:
+        --------
+        >>> y_true_labels, y_pred_labels = indices_to_labels(y_test, y_pred_values, ["cat", "dog", "bird"], loss_type="sparse_categorical_crossentropy")
+        """
+        if loss_type == "categorical_crossentropy":
+            y_test_indices = [np.argmax(row) for row in y_test]
+        elif loss_type == "sparse_categorical_crossentropy":
+            y_test_indices = y_test.astype(int)
+        else:
+            raise ValueError(f"Unsupported loss type: {loss_type}")
+
+        y_pred_indices = [np.argmax(row) for row in y_pred_values]
+
+        y_test_labels = [class_labels[idx] for idx in y_test_indices]
+        y_pred_labels = [class_labels[idx] for idx in y_pred_indices]
+
+        return y_test_labels, y_pred_labels
