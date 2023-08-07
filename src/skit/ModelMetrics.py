@@ -211,8 +211,7 @@ class ModelMetrics:
     def show_history(
         self,
         version,
-        figsize=(8,6),
-        plot = {"Accuracy":['accuracy','val_accuracy'], 'Loss':['loss', 'val_loss']}
+        figsize=(8,6)
     ):
         history = self.output[version]['history']
         display(show_history(history, figsize = figsize, plot = plot))
