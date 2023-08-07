@@ -54,9 +54,12 @@ if IS_TENSORFLOW_IMPORTED:
             raise ValueError("The provided dataset is not an instance of tf.data.Dataset.")
 
         # Extraire x_test et y_test du tf.data.Dataset
-        x_test = [] if with_x_test else None
+        if with_x_test:
+            x_test = []
+
         y_test = []
         y_pred = []
+
         try:
             for data, label in tqdm(dataset, desc="Predicting", unit="batch"):
                 if with_x_test:
@@ -67,10 +70,14 @@ if IS_TENSORFLOW_IMPORTED:
                 predictions = model.predict(data, verbose=verbosity)
                 y_pred.append(predictions)
 
+            if with_x_test:
+                x_test = np.concatenate(x_test, axis=0)
+
             y_test = np.concatenate(y_test, axis=0)
             y_pred = np.concatenate(y_pred, axis=0)
 
             y_test, y_pred = tf_convert_predictions_to_labels(y_test, y_pred, labels)
+
         except MemoryError:
             raise MemoryError("Memory exceeded while processing data. Consider processing a smaller dataset with take.")
 
