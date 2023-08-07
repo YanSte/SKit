@@ -10,24 +10,34 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # -------------------------------------------------------------
 
 def mkdir(path):
-    '''
-    Create a subdirectory
-    Mode is 0750, do nothing if exist
-    args:
-        path : directory to create
-    return:
-        none
-    '''
+    """
+    Create a directory at the specified path if it doesn't exist.
+
+    Parameters:
+    -----------
+    path : str
+        Path of the directory to create.
+
+    Notes:
+    ------
+    The directory mode will be set to 0750.
+    If the directory already exists, the function will do nothing.
+    """
     os.makedirs(path, mode=0o750, exist_ok=True)
 
 def rmdir(path):
     """
-    Deletes a folder at the specified path.
+    Deletes a directory at the specified path.
 
-    :param path: The path of the folder to delete.
-    :type path: str
+    Parameters:
+    -----------
+    path : str
+        Path of the directory to delete.
+
+    Notes:
+    ------
+    If the directory doesn't exist, a message will be printed.
     """
-
     # Vérifie si le dossier existe
     if os.path.exists(path):
         # Utilise shutil.rmtree pour supprimer le dossier
@@ -37,6 +47,26 @@ def rmdir(path):
 
 
 def ls(directory_path, filetype='all'):
+    """
+    List files or directories inside the given directory based on the specified file type.
+
+    Parameters:
+    -----------
+    directory_path : str
+        Path of the directory to list its contents.
+
+    filetype : {'all', 'dir', 'file'}, optional
+        Type of file or directory to list.
+        - 'all' : Lists both files and directories.
+        - 'dir' : Lists only directories.
+        - 'file': Lists only files.
+        Default is 'all'.
+
+    Returns:
+    --------
+    list
+        List containing the names of files or directories.
+    """
     if filetype == 'dir':
         return [name for name in os.listdir(directory_path) if os.path.isdir(os.path.join(directory_path, name))]
     elif filetype == 'file':
@@ -46,11 +76,17 @@ def ls(directory_path, filetype='all'):
 
 def get_directory_size(path):
     """
-    Return the directory size, but only 1 level
-    args:
-        path : directory path
-    return:
-        size in Mo
+    Calculates the total size of files in a directory, limited to only 1 level deep.
+
+    Parameters:
+    -----------
+    path : str
+        Path of the directory whose size is to be determined.
+
+    Returns:
+    --------
+    float
+        Total size of the directory in megabytes (MB).
     """
     size=0
     for f in os.listdir(path):
@@ -61,15 +97,24 @@ def get_directory_size(path):
 
 def count_files(data_dir, file_type):
     """
-    Count the number of specific type files in a given directory and its subdirectories.
+    Count the number of specific file types in a directory and its subdirectories.
 
-    Args:
-        data_dir (str): The directory to start the search from.
-        file_type (str): The type of file to count. Should include the dot, like '.txt' or '.jpg'.
+    Parameters:
+    -----------
+    data_dir : str
+        Starting directory to begin the search.
+
+    file_type : str
+        Type of file to count. Should include the dot, e.g., '.txt' or '.jpg'.
 
     Returns:
-        dict: A dictionary where the keys are the paths of the directories and
-              the values are the counts of the specific type files in those directories.
+    --------
+    dict
+        A dictionary with keys as paths of directories and values as the counts of the specific file types in those directories.
+
+    Notes:
+    ------
+    This function uses parallel processing to count files for faster results.
     """
     # Function to count files in parallel
     def count_files_in_directory(path, file_type):

@@ -21,24 +21,37 @@ if IS_TENSORFLOW_IMPORTED:
         model : tf.keras.Model
             The TensorFlow model to be used for generating predictions.
 
-        num_take : int or 'all', optional
-            Number of samples from the dataset on which predictions are to be made. If set to 'all', predictions will be generated for the entire dataset. Defaults to 'all'.
+        labels : list of str
+            List of class labels where the index of each label corresponds to its class index.
+
+        with_x_test : bool, optional
+            If set to True, the returned tuple will contain the input data samples as the first element. Defaults to False.
+
+        loss_type : str, optional
+            Type of loss used in the model. Either 'categorical_crossentropy' or 'sparse_categorical_crossentropy'. Defaults to 'categorical_crossentropy'.
+
+        verbosity : int, optional
+            Verbosity mode. 0 = silent, 1 = progress bar. Defaults to 0.
 
         Returns:
         --------
         tuple of numpy.ndarray
-            Three arrays are returned:
+            If with_x_test is True:
             - The first array contains the input data samples.
             - The second array contains the true labels.
             - The third array contains the predicted values from the model.
+
+            If with_x_test is False:
+            - The first array contains the true labels.
+            - The second array contains the predicted values from the model.
 
         Raises:
         -------
         ValueError:
             If the input 'dataset' is not an instance of tf.data.Dataset.
 
-        Exception:
-            If the value of 'num_take' is greater than the number of samples available in the dataset.
+        MemoryError:
+            If memory is exceeded while processing data.
 
         Notes:
         ------
@@ -48,7 +61,7 @@ if IS_TENSORFLOW_IMPORTED:
         --------
         >>> dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test)).batch(32)
         >>> model = tf.keras.models.load_model('path_to_model.h5')
-        >>> x, y_true, y_pred = tf_predictions(dataset, model)
+        >>> x, y_true, y_pred = tf_predictions(dataset, model, labels=["cat", "dog", "bird"], with_x_test=True)
         """
         if not isinstance(dataset, tf.data.Dataset):
             raise ValueError("The provided dataset is not an instance of tf.data.Dataset.")
@@ -88,28 +101,37 @@ if IS_TENSORFLOW_IMPORTED:
 
     def tf_convert_predictions_to_labels(y_test, y_pred, class_labels, loss_type="categorical_crossentropy"):
         """
-        Converts y_test and predicted probabilities in y_pred_values to their corresponding class labels.
+        Converts the ground truth values (y_test) and predicted probabilities (y_pred) into their corresponding class labels.
+
+        Given the true class labels (either one-hot encoded or integer-encoded) and the predicted class probabilities, this function maps each entry to its corresponding class label based on the provided `class_labels` list.
 
         Parameters:
         -----------
         y_test : numpy.ndarray
-            Array of true class labels. One-hot encoded for 'categorical_crossentropy' and integer-encoded for 'sparse_categorical_crossentropy'.
+            Ground truth labels. If using 'categorical_crossentropy', these should be one-hot encoded. For 'sparse_categorical_crossentropy', these should be integer-encoded.
 
         y_pred : numpy.ndarray
-            Array of predicted class probabilities. This can be obtained from a model's prediction output.
+            Predicted class probabilities, typically from the output of a model's predict method.
 
         class_labels : list of str
-            List of class labels where the index of each label corresponds to its class index.
+            A list of class labels in which the index of each label corresponds to its class index in predictions and true labels.
 
         loss_type : str, optional
-            Type of loss used in the model. Either 'categorical_crossentropy' or 'sparse_categorical_crossentropy'. Defaults to 'categorical_crossentropy'.
+            Specifies the type of encoding for `y_test` and interpretation for `y_pred`. Supported values are:
+            - 'categorical_crossentropy': For one-hot encoded labels.
+            - 'sparse_categorical_crossentropy': For integer-encoded labels.
+            Defaults to 'categorical_crossentropy'.
 
         Returns:
         --------
         tuple of list of str
-            Two lists are returned:
-            - The first list contains the true class labels.
-            - The second list contains the predicted class labels based on the max probability.
+            - The first list contains the true class labels mapped from `y_test`.
+            - The second list contains the predicted class labels based on the highest probability in `y_pred`.
+
+        Raises:
+        -------
+        ValueError:
+            If an unsupported `loss_type` value is provided.
 
         Example:
         --------

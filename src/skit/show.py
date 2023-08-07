@@ -15,14 +15,37 @@ from skit.config import IS_TENSORFLOW_IMPORTED
 # ==============================
 
 def show_text(heading_level, text="", add_indent=True):
-    '''
-    Display a markdown heading or bold text
-    args:
-        heading_level : heading level (h1, h2, h3, h4, h5, b)
-        text : text to display
-    return:
-        none
-    '''
+    """
+    Renders and displays markdown styled text, including headings of various levels or bold text.
+
+    This function provides a convenient way to produce formatted markdown display outputs, often used within notebooks such as Jupyter.
+
+    Parameters:
+    -----------
+    heading_level : str
+        Specifies the style/format of the display. Supported values are:
+        - 'h1' to 'h5': For headings of different levels.
+        - 'b': For bold text.
+        - 'sep': To display a separator line.
+        Any other string will be treated as plain text.
+
+    text : str, optional
+        The content to be displayed in the specified format. Defaults to an empty string.
+
+    add_indent : bool, optional
+        If set to True, an additional line break will be added after the displayed text, providing an indentation effect. Defaults to True.
+
+    Example:
+    --------
+    >>> show_text('h1', 'Title')
+    # Title (displayed as a Level 1 Heading)
+
+    >>> show_text('b', 'Bolded Text')
+    **Bolded Text** (displayed as bold text)
+
+    >>> show_text('sep')
+    ==========================================
+    """
     if heading_level == 'h1':
         display(Markdown(f'# {text}'))
 
@@ -130,25 +153,60 @@ def show_images(
     interpolation='lanczos'
 ):
     """
-    Display a grid of images with labels.
+    Displays a grid of images with their corresponding labels.
 
-    Args:
-        x: The images to display. Shapes must be (-1, lx, ly), (-1, lx, ly, 1), or (-1, lx, ly, 3).
-        y: Real classes or labels associated with the images. (None)
-        indices: Indices of images to show or 'all' for all images. ('all')
-        columns: Number of columns in the grid. (12)
-        figure_size: Size of the figure (width, height). (1, 1)
-        show_colorbar: Whether to show the colorbar. (False)
-        y_pred: Predicted classes associated with the images. (None)
-        color_map: Matplotlib color map to use. ('binary')
-        normalization: Matplotlib imshow normalization. (None)
-        padding: Padding between rows in the grid. (0.35)
-        spines_alpha: Alpha value for the spines. (1)
-        font_size: Font size in pixels. (20)
-        interpolation: Interpolation method for displaying the images. ('lanczos')
+    This function provides a visually pleasing way to visualize images, typically used for exploratory data analysis in notebook environments.
 
-    Returns:
-        None
+    Parameters:
+    -----------
+    x : numpy.ndarray
+        The array of images to display. Supported shapes are (-1, lx, ly), (-1, lx, ly, 1), or (-1, lx, ly, 3).
+
+    y : list or numpy.ndarray, optional
+        The true class labels or annotations associated with the images.
+
+    indices : list or str, optional
+        Specifies which images to display from the input 'x'. If set to 'all', all images will be displayed. Otherwise, it should be a list of indices. Defaults to 'all'.
+
+    columns : int, optional
+        Number of columns in the grid layout of images. Defaults to 12.
+
+    figure_size : tuple of int, optional
+        Specifies the width and height of each individual figure in the grid. Defaults to (1, 1).
+
+    show_colorbar : bool, optional
+        Whether to display the colorbar beside the images. This can be helpful for grayscale images. Defaults to False.
+
+    y_pred : list or numpy.ndarray, optional
+        Predicted class labels for the images.
+
+    color_map : str, optional
+        Name of the colormap used by matplotlib to plot the images. Defaults to 'binary'.
+
+    normalization : tuple of float or None, optional
+        Tuple specifying the normalization bounds as (min, max) for displaying the image. Useful for enhancing contrast in certain images. Defaults to None.
+
+    padding : float, optional
+        Specifies the padding between rows in the grid. Defaults to 0.35.
+
+    spines_alpha : float, optional
+        Transparency level of the borders around the images. Ranges between 0 (completely transparent) to 1 (fully opaque). Defaults to 1.
+
+    font_size : int, optional
+        Font size for the labels. Defaults to 20.
+
+    interpolation : str, optional
+        Specifies the interpolation algorithm to use when displaying the images. Useful for high-resolution or upscaled images. Defaults to 'lanczos'.
+
+    Example:
+    --------
+    >>> images = np.random.random((100, 28, 28))
+    >>> labels = ["Label" + str(i) for i in range(100)]
+    >>> show_images(images, y=labels, columns=10, figure_size=(2, 2))
+
+    Notes:
+    ------
+    If both 'y' (true labels) and 'y_pred' (predicted labels) are provided, and they differ for an image, the predicted label will be shown in red followed by the true label in parentheses.
     """
     if indices == 'all':
         indices = range(len(x))
@@ -218,14 +276,24 @@ def show_donut(
     title=None
 ):
     """
-    Draw a donut
-    args:
-        values   : list of values
-        labels   : list of labels
-        colors   : list of color (["lightsteelblue","coral"])
-        figsize  : size of figure ( (6,6) )
-    return:
-        nothing
+    Displays a donut chart.
+
+    Parameters:
+    -----------
+    values : list
+        List of values corresponding to each segment in the donut chart.
+
+    labels : list
+        List of labels for each segment.
+
+    colors : list, optional
+        List of colors for each segment. Default is ["lightsteelblue", "coral"].
+
+    figsize : tuple, optional
+        Size of the figure. Default is (6, 6).
+
+    title : str, optional
+        Title for the donut chart. Default is None.
     """
     # ---- Donut
     plt.figure(figsize=figsize)
@@ -248,14 +316,43 @@ def show_donut(
 def show_confusion_matrix(
     y_true,
     y_pred,
-    target_names,
+    labels,
     title='Confusion matrix',
     cmap=None,
     normalize=True,
     figsize=(10, 8),
     digit_format='{:0.2f}'
 ):
-    cm = sklearn.metrics.confusion_matrix( y_true,y_pred, normalize=None, labels=target_names)
+    """
+    Displays a confusion matrix.
+
+    Parameters:
+    -----------
+    y_true : array-like
+        List or array of true labels.
+
+    y_pred : array-like
+        List or array of predicted labels.
+
+    labels : list
+        List of labels used in confusion matrix.
+
+    title : str, optional
+        Title for the confusion matrix. Default is 'Confusion matrix'.
+
+    cmap : colormap, optional
+        Color map used for plotting. Default is None, which means 'Blues' colormap will be used.
+
+    normalize : bool, optional
+        If True, the confusion matrix will be normalized. Default is True.
+
+    figsize : tuple, optional
+        Size of the figure. Default is (10, 8).
+
+    digit_format : str, optional
+        Format for the numbers in the confusion matrix. Default is '{:0.2f}'.
+    """
+    cm = sklearn.metrics.confusion_matrix( y_true,y_pred, normalize=None, labels=labels)
 
     accuracy = np.trace(cm) / float(np.sum(cm))
     misclass = 1 - accuracy
@@ -268,10 +365,10 @@ def show_confusion_matrix(
     plt.title(title)
     plt.colorbar()
 
-    if target_names is not None:
-        tick_marks = np.arange(len(target_names))
-        plt.xticks(tick_marks, target_names, rotation=90)
-        plt.yticks(tick_marks, target_names)
+    if labels is not None:
+        tick_marks = np.arange(len(labels))
+        plt.xticks(tick_marks, labels, rotation=90)
+        plt.yticks(tick_marks, labels)
 
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
@@ -316,6 +413,68 @@ if IS_TENSORFLOW_IMPORTED:
         font_size=20,
         interpolation='lanczos'
     ):
+        """
+        Displays images from a TensorFlow dataset.
+
+        Parameters:
+        -----------
+        dataset : tf.data.Dataset
+            TensorFlow dataset containing images and labels.
+
+        labels : list or str, optional
+            List of labels for images. If set to 'default', the labels are fetched from the dataset.
+            Default is 'default'.
+
+        indices : list or str, optional
+            Indices of the images to display from the dataset. If set to 'all', all images are displayed.
+            Default is 'all'.
+
+        columns : int, optional
+            Number of columns for displaying images. Default is 1.
+
+        figure_size : tuple, optional
+            Size of the figure for each image. Default is (1, 1).
+
+        show_colorbar : bool, optional
+            If True, a color bar is shown alongside the images. Default is False.
+
+        pred : array-like, optional
+            List or array of predicted labels for images.
+
+        color_map : str, optional
+            Color map used for plotting images. Default is 'binary'.
+
+        normalization : str, optional
+            Type of normalization to apply to images. Currently unused and kept for future extension.
+            Default is None.
+
+        padding : float, optional
+            Padding around images. Default is 0.35.
+
+        spines_alpha : float, optional
+            Alpha value for spines around images. Default is 1.
+
+        font_size : int, optional
+            Font size for labels. Default is 20.
+
+        interpolation : str, optional
+            Interpolation method used for displaying images. Default is 'lanczos'.
+
+        Raises:
+        -------
+        Exception:
+            - If the dataset does not have a 'class_names' attribute and labels are set to 'default'.
+            - If the specified number of columns is greater than the size of the dataset.
+            - If the specified indices are greater than the batch size.
+
+        Notes:
+        ------
+        This function is designed to work with TensorFlow datasets. Ensure you have TensorFlow imported and
+        the dataset provided is compatible.
+        """
+        if not isinstance(dataset, tf.data.Dataset):
+            raise ValueError("The provided dataset is not an instance of tf.data.Dataset.")
+
         # Labels
         # ----
         if labels == "default":
