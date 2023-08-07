@@ -107,7 +107,7 @@ if IS_TENSORFLOW_IMPORTED:
 
         Example:
         --------
-        >>> y_true_labels, y_pred_labels = indices_to_labels(y_test, y_pred_values, ["cat", "dog", "bird"], loss_type="sparse_categorical_crossentropy")
+        >>> y_true_labels, y_pred_labels = tf_convert_predictions_to_labels(y_test, y_pred, ["cat", "dog", "bird"], loss_type="sparse_categorical_crossentropy")
         """
         if loss_type == "categorical_crossentropy":
             y_test_indices = [np.argmax(row) for row in y_test]
@@ -116,9 +116,9 @@ if IS_TENSORFLOW_IMPORTED:
         else:
             raise ValueError(f"Unsupported loss type: {loss_type}")
 
-        y_pred_indices = [np.argmax(row) for row in y_pred_values]
-
         y_test_labels = [class_labels[idx] for idx in y_test_indices]
+
+        y_pred_indices = [np.argmax(row) for row in y_pred]
         y_pred_labels = [class_labels[idx] for idx in y_pred_indices]
 
         return y_test_labels, y_pred_labels
