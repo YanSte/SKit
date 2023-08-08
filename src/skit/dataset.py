@@ -212,3 +212,45 @@ def rescale_dataset(*data, scale=1):
     """
     out = [ d[:int(scale*len(d))] for d in data ]
     return out[0] if len(out)==1 else out
+
+# ==============================
+#           TensorFlow
+# ==============================
+
+if IS_TENSORFLOW_IMPORTED:
+    import tensorflow as tf
+
+    def tf_shuffle_dataset(dataset, batch_size, seed):
+        """
+        Shuffles a TensorFlow dataset using a batch-based method and also shuffles the batches themselves.
+
+        Args:
+        - dataset (tf.data.Dataset): The input dataset to shuffle.
+        - batch_size (int): Size of each batch.
+        - seed (int, optional): Seed for shuffle reproducibility.
+
+        Returns:
+        - tf.data.Dataset: Shuffled dataset.
+        """
+        if not isinstance(dataset, tf.data.Dataset):
+            raise ValueError("The provided dataset is not an instance of tf.data.Dataset.")
+
+
+        # Split the dataset into batches
+        num_elements = sum(1 for _ in dataset)
+        num_batches = num_elements // batch_size
+
+        batches = [dataset.skip(i * batch_size).take(batch_size) for i in range(num_batches)]
+
+        # Shuffle each batch individually
+        shuffled_batches = [batch.shuffle(buffer_size=batch_size, seed=seed) for batch in batches]
+
+        # Shuffle the order of batches themselves
+        batch_order = tf.random.shuffle(tf.range(num_batches), seed=seed)
+
+        # Merge the shuffled batches to create the final dataset
+        shuffled_dataset = tf.data.Dataset.from_tensor_slices([])
+        for i in tqdm(batch_order, desc="Shuffling dataset", unit="batch"):
+            shuffled_dataset = shuffled_dataset.concatenate(shuffled_batches[i.numpy()])
+
+        return shuffled_dataset
