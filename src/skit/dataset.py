@@ -225,12 +225,16 @@ if IS_TENSORFLOW_IMPORTED:
         Shuffles a TensorFlow dataset memory-preservingly using a batch-based method and also shuffles the batches themselves.
 
         Args:
-        - dataset (tf.data.Dataset): The input dataset to shuffle.
-        - batch_size (int): Size of each batch.
-        - seed (int, optional): Seed for shuffle reproducibility.
+        - dataset :tf.data.Dataset
+            The input dataset to shuffle.
+        - batch_size : int
+            Size of each batch.
+        - seed : int, optional
+            Seed for shuffle reproducibility.
 
         Returns:
-        - tf.data.Dataset: Shuffled dataset.
+        - tf.data.Dataset:
+            Shuffled dataset.
 
         Example:
         --------

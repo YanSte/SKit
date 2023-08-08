@@ -17,7 +17,7 @@ SKit is an innovative Python library that simplifies the deployment process of M
 You can install SKit using pip:
 
 ```
-pip install SKit
+pip install git+https://github.com/YanSteph/SKit.git
 ```
 
 ## Usage
@@ -34,7 +34,7 @@ The complete documentation for SKit will come soon.
 
 ## Contributing
 
-Contributions are always welcome! 
+Contributions are always welcome!
 
 ## License
 
