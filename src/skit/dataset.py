@@ -222,7 +222,7 @@ if IS_TENSORFLOW_IMPORTED:
 
     def tf_shuffle_dataset(dataset, batch_size, seed):
         """
-        Shuffles a TensorFlow dataset using a batch-based method and also shuffles the batches themselves.
+        Shuffles a TensorFlow dataset memory-preservingly using a batch-based method and also shuffles the batches themselves.
 
         Args:
         - dataset (tf.data.Dataset): The input dataset to shuffle.
@@ -231,10 +231,25 @@ if IS_TENSORFLOW_IMPORTED:
 
         Returns:
         - tf.data.Dataset: Shuffled dataset.
+
+        Example:
+        --------
+        Let's consider a dataset: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] and batch_size = 2.
+
+        1. The dataset is divided into the following batches:
+           [1, 2], [3, 4], [5, 6], [7, 8], [9, 10]
+
+        2. Each batch is shuffled. Let's assume the shuffled batches are:
+           [2, 1], [4, 3], [6, 5], [8, 7], [10, 9] (Note: The actual shuffle might differ)
+
+        3. The order of these shuffled batches is then shuffled. Let's assume the shuffled order is:
+           [4, 3], [2, 1], [8, 7], [10, 9], [6, 5] (Note: The actual shuffle might differ)
+
+        4. These batches are concatenated together to give the final shuffled dataset:
+           [4, 3, 2, 1, 8, 7, 10, 9, 6, 5]
         """
         if not isinstance(dataset, tf.data.Dataset):
             raise ValueError("The provided dataset is not an instance of tf.data.Dataset.")
-
 
         # Split the dataset into batches
         num_elements = sum(1 for _ in dataset)
@@ -249,8 +264,8 @@ if IS_TENSORFLOW_IMPORTED:
         batch_order = tf.random.shuffle(tf.range(num_batches), seed=seed)
 
         # Merge the shuffled batches to create the final dataset
-        shuffled_dataset = tf.data.Dataset.from_tensor_slices([])
-        for i in tqdm(batch_order, desc="Shuffling dataset", unit="batch"):
+        shuffled_dataset = shuffled_batches[0]
+        for i in tqdm(batch_order[1:], desc="Shuffling dataset", unit="batch"):
             shuffled_dataset = shuffled_dataset.concatenate(shuffled_batches[i.numpy()])
 
         return shuffled_dataset
