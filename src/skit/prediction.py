@@ -198,7 +198,8 @@ if IS_TENSORFLOW_IMPORTED:
             if incorrect_count >= qt_desired:
                 break
 
-        # Close the progress bar when done
+        # Show and close the progress bar when done
+        pbar.update(qt_desired)
         pbar.close()
 
         if with_x_test:
