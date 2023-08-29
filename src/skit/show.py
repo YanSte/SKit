@@ -255,9 +255,10 @@ def show_images(
 
         if draw_labels and not draw_predicted_labels:
             axs.set_xlabel(y[i], fontsize=font_size)
+
         if draw_labels and draw_predicted_labels:
             if y[i] != y_pred[i]:
-                axs.set_xlabel(f'{y_pred[i]} ({y[i]})', fontsize=font_size)
+                axs.set_xlabel(f'{y_pred[i]} (✓: {y[i]})', fontsize=font_size)
                 axs.xaxis.label.set_color('red')
             else:
                 axs.set_xlabel(y[i], fontsize=font_size)
