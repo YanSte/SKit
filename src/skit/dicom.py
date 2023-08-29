@@ -1,6 +1,13 @@
 
 from skit.config import IS_PYDICOM_IMPORTED
 
+def install_pydicom_library():
+        result = subprocess.run(['pip', 'install', '-q','pydicom'])
+        if result.returncode == 0:
+            print("Pydicom installed 📦")
+        else:
+          raise Exception("Error on install Kaggle.")
+
 if IS_PYDICOM_IMPORTED:
     """
     This block of code checks if the code is being run with PYDICOM Lib.
