@@ -98,10 +98,6 @@ if IN_COLAB:
         Exception
             If the Kaggle CLI is not installed or if there's an error during the download.
         """
-        if os.path.exists(dataset_destination_dir):
-            print(f"Dataset already exists at {dataset_destination_dir}. Skipping download.")
-            return
-
         if not is_kaggle_cli_installed():
           raise Exception("Kaggle CLI is not installed. Please install it using `pip install kaggle`.")
 
@@ -152,11 +148,16 @@ if IN_COLAB:
             Default is 'Kaggle'.
         """
         try:
-            install_kaggle()
             gdrive_mount(mountpoint_gdrive_path)
-            set_environ_kaggle_config(kaggle_config_dir)
-            download_and_unzip_dataset(kaggle_dataset_url, dataset_destination_path, type)
-            print("Dataset downloaded and unzipped successfully!")
+
+            if os.path.exists(dataset_destination_path) == False:
+                install_kaggle()
+                set_environ_kaggle_config(kaggle_config_dir)
+                download_and_unzip_dataset(kaggle_dataset_url, dataset_destination_path, type)
+                print("Dataset downloaded and unzipped successfully!")
+            else:
+                print(f"Dataset already exists at {dataset_destination_path}. Skipping download.")
+                return
 
         except Exception as e:
             print(f"An error occurred: {e}")
