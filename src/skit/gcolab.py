@@ -31,7 +31,7 @@ if IN_COLAB:
             else:
                 return None
 
-    def install_kaggle():
+    def install_kaggle_library():
         """
         Installs the Kaggle CLI tool using pip.
 
@@ -151,7 +151,7 @@ if IN_COLAB:
             gdrive_mount(mountpoint_gdrive_path)
 
             if os.path.exists(dataset_destination_path) == False:
-                install_kaggle()
+                install_kaggle_library()
                 set_environ_kaggle_config(kaggle_config_dir)
                 download_and_unzip_dataset(kaggle_dataset_url, dataset_destination_path, type)
                 print("Dataset downloaded and unzipped successfully!")
