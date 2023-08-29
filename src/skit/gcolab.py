@@ -1,20 +1,20 @@
 from skit.config import IN_COLAB
-from skit.utils import mkdir
-from enum import Enum
 
 if IN_COLAB:
     """
     This block of code checks if the code is being run in Google Colab.
     If so, it sets up a number of utility functions to handle the Kaggle API.
     """
-
     try:
+        from google.colab import drive
+        from skit.utils import mkdir
+        from enum import Enum
         import subprocess
         import shutil
         import os
         import glob
         import google.colab
-        from google.colab import drive
+
 
     except ImportError:
         print(f"Missing some imports: {ImportError}")

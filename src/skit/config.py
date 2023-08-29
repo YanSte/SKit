@@ -9,7 +9,6 @@ try:
 except ImportError:
     IN_COLAB = False
 
-
 # ==============================
 #           Library
 # ==============================
@@ -20,3 +19,10 @@ try:
     IS_TENSORFLOW_IMPORTED = True
 except ImportError:
     IS_TENSORFLOW_IMPORTED = False
+
+# Env with library tensorflow
+try:
+    import pydicom
+    IS_PYDICOM_IMPORTED = True
+except ImportError:
+    IS_PYDICOM_IMPORTED = False
