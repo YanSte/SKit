@@ -1,7 +1,6 @@
 from skit.config import IN_COLAB
 from skit.utils import mkdir
 from enum import Enum
-from zipfile import ZipFile
 
 if IN_COLAB:
     """
@@ -82,20 +81,6 @@ if IN_COLAB:
         except subprocess.CalledProcessError:
             return False
 
-    def unzip_and_delete_from_zip(zip_filepath, extract_to):
-        with ZipFile(zip_filepath, 'r') as zip_ref:
-            all_files = zip_ref.namelist()
-
-            for file_name in all_files:
-                zip_ref.extract(file_name, extract_to)
-
-                with ZipFile(zip_filepath, 'a') as zip_write:
-                    zip_write._delete(file_name)
-
-                if not zip_ref.namelist():
-                    os.remove(zip_filepath)
-                    break
-
     def download_and_unzip_dataset(kaggle_dataset_url, dataset_destination_dir, type):
         """
         Downloads and unzips a Kaggle dataset.
@@ -113,6 +98,10 @@ if IN_COLAB:
         Exception
             If the Kaggle CLI is not installed or if there's an error during the download.
         """
+        if os.path.exists(dataset_destination_dir):
+            print(f"Dataset already exists at {dataset_destination_dir}. Skipping download.")
+            return
+
         if not is_kaggle_cli_installed():
           raise Exception("Kaggle CLI is not installed. Please install it using `pip install kaggle`.")
 
@@ -125,7 +114,8 @@ if IN_COLAB:
 
           # Unzip each ZIP file one by one
           for zip_file in zip_files:
-              unzip_and_delete_from_zip(zip_file, dataset_destination_dir)
+            subprocess.run(['unzip', zip_file])
+            os.remove(zip_file)
 
         except subprocess.CalledProcessError as e:
           raise Exception(f"An error occurred while downloading the dataset: {e}")
