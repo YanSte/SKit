@@ -213,6 +213,64 @@ def rescale_dataset(*data, scale=1):
     out = [ d[:int(scale*len(d))] for d in data ]
     return out[0] if len(out)==1 else out
 
+
+
+from sklearn.model_selection import StratifiedKFold
+import pandas as pd
+
+def stratifiedTrainValidSplit(df, x_feature_columns, y_target_columns, num_splits=5, selected_fold=1, seed=None, shuffle=True):
+    """
+    Splits the DataFrame into training and validation sets using Stratified K-Folds
+
+    NOTE: That resets the index for each train and validation dataframe.
+
+    Parameters:
+    -----------
+    df : DataFrame
+        The DataFrame containing the dataset.
+    x_feature_columns : Array of str
+        The name of the features column.
+    y_target_columns : Array of str
+        The name of the labels column.
+    num_splits : int
+        The number of splits for StratifiedKFold.
+    selected_fold : int
+        The fold to be used for validation.
+    seed : int
+        The random seed for reproducibility.
+    shuffle : bool
+        Whether to shuffle the data before splitting.
+
+    Returns:
+    --------
+    train_df : DataFrame
+        The training set DataFrame.
+    valid_df : DataFrame
+        The validation set DataFrame.
+    """
+
+    # Initialize StratifiedKFold
+    stratifiedKFold = StratifiedKFold(n_splits=num_splits, random_state=seed, shuffle=shuffle)
+
+    # Prepare the features and labels
+    X = df[x_feature_columns]
+    y = df[y_target_columns]
+
+    # Add a new column for the fold
+    df["Fold"] = "train"
+
+    # Perform the split
+    for fold_no, (train, valid) in enumerate(stratifiedKFold.split(X, y), start=1):
+        if fold_no == selected_fold:
+            df.loc[valid, "Fold"] = "valid"
+
+    # Separate into train and valid DataFrames and reset index
+    train_df = df[df.Fold == "train"].reset_index(drop=True)
+    valid_df = df[df.Fold == "valid"].reset_index(drop=True)
+    df.drop(columns=['Fold'], inplace=True)
+
+    return train_df, valid_df
+
 # ==============================
 #           TensorFlow
 # ==============================
