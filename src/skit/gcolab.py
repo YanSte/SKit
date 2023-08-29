@@ -1,5 +1,6 @@
 from skit.config import IN_COLAB
 from skit.utils import mkdir
+from enum import Enum
 
 if IN_COLAB:
     """
@@ -17,6 +18,10 @@ if IN_COLAB:
 
     except ImportError:
         print(f"Missing some imports: {ImportError}")
+
+    class DatasetType(Enum):
+        DATASETS = "datasets"
+        COMPETITIONS = "competitions"
 
     def install_kaggle():
         """
@@ -64,7 +69,7 @@ if IN_COLAB:
         except subprocess.CalledProcessError:
             return False
 
-    def download_and_unzip_dataset(kaggle_dataset_url, dataset_destination_dir):
+    def download_and_unzip_dataset(kaggle_dataset_url, dataset_destination_dir, type):
         """
         Downloads and unzips a Kaggle dataset.
 
@@ -88,7 +93,7 @@ if IN_COLAB:
         os.chdir(dataset_destination_dir)
 
         try:
-          subprocess.run(['kaggle', 'datasets', 'download', '-d', kaggle_dataset_url], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+          subprocess.run(['kaggle', type.value, 'download', '-d', kaggle_dataset_url], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
           zip_files = glob.glob("*.zip")
 
           # Unzip each ZIP file one by one
@@ -101,6 +106,7 @@ if IN_COLAB:
 
     def setup_kaggle_dataset(
         kaggle_dataset_url,
+        type = DatasetType.DATASETS,
         dataset_destination_path = '/content',
         mountpoint_gdrive_path = '/content',
         kaggle_config_dir = 'Kaggle'
@@ -113,6 +119,9 @@ if IN_COLAB:
         -----------
         kaggle_dataset_url : str
             The Kaggle dataset URL.
+
+        type : str
+            Type of Datasets
 
         dataset_destination_path : str, optional
             The directory where the dataset will be saved and unzipped.
@@ -129,7 +138,7 @@ if IN_COLAB:
         try:
             install_kaggle()
             set_environ_kaggle_config(mountpoint_gdrive_path, kaggle_config_dir)
-            download_and_unzip_dataset(kaggle_dataset_url, dataset_destination_path)
+            download_and_unzip_dataset(kaggle_dataset_url, dataset_destination_path, type)
             print("Dataset downloaded and unzipped successfully!")
 
         except Exception as e:
