@@ -1,11 +1,13 @@
 import os
 import shutil
-from tqdm import tqdm
 import numpy as np
 import h5py
+import pandas as pd
+
+from sklearn.model_selection import StratifiedKFold
+from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from skit.utils import rmdir
-
 from skit.config import IS_TENSORFLOW_IMPORTED
 
 # ==============================
@@ -212,11 +214,6 @@ def rescale_dataset(*data, scale=1):
     """
     out = [ d[:int(scale*len(d))] for d in data ]
     return out[0] if len(out)==1 else out
-
-
-
-from sklearn.model_selection import StratifiedKFold
-import pandas as pd
 
 def stratifiedTrainValidSplit(df, x_feature_columns, y_target_columns, num_splits=5, selected_fold=1, seed=None, shuffle=True):
     """

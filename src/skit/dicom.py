@@ -1,5 +1,6 @@
-from skit.config import IS_PYDICOM_IMPORTED
 import subprocess
+
+from skit.config import IS_PYDICOM_IMPORTED
 
 def install_pydicom_library():
         result = subprocess.run(['pip', 'install', '-q','pydicom'])
