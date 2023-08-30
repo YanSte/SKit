@@ -245,16 +245,17 @@ def stratifiedTrainValidSplit(df, x_feature_columns, y_target_columns, num_split
     valid_df : DataFrame
         The validation set DataFrame.
     """
-
     # Initialize StratifiedKFold
+    # ----
     stratifiedKFold = StratifiedKFold(n_splits=num_splits, random_state=seed, shuffle=shuffle)
+
+    # Add a new column for the fold
+    # ----
+    df["Fold"] = "train"
 
     # Prepare the features and labels
     X = df[x_feature_columns]
     y = df[y_target_columns]
-
-    # Add a new column for the fold
-    df["Fold"] = "train"
 
     # Perform the split
     for fold_no, (train, valid) in enumerate(stratifiedKFold.split(X, y), start=1):
@@ -264,6 +265,7 @@ def stratifiedTrainValidSplit(df, x_feature_columns, y_target_columns, num_split
     # Separate into train and valid DataFrames and reset index
     train_df = df[df.Fold == "train"].reset_index(drop=True)
     valid_df = df[df.Fold == "valid"].reset_index(drop=True)
+    
     df.drop(columns=['Fold'], inplace=True)
 
     return train_df, valid_df
