@@ -44,16 +44,16 @@ if IN_COLAB:
         if result.returncode != 0:
           raise Exception("Error on install Kaggle.")
 
-    def gdrive_mount(mountpoint_gdrive_path):
+    def gdrive_mount(gdrive_path):
         """
         Mounts the Google Drive to Colab
 
         Parameters:
         -----------
-        mountpoint_gdrive_path : str
+        gdrive_path : str
             Path to mount the Google Drive.
         """
-        drive.mount(mountpoint_gdrive_path, force_remount=True)
+        drive.mount(gdrive_path, force_remount=True)
 
     def _set_environ_kaggle_config(kaggle_config_dir):
         """
@@ -81,7 +81,7 @@ if IN_COLAB:
         except subprocess.CalledProcessError:
             return False
 
-    def _download(kaggle_dataset_url, mountpoint_gdrive_dataset_path, type):
+    def _download(kaggle_dataset_url, gdrive_dataset_path, type):
         """
         Downloads and unzips a Kaggle dataset.
 
@@ -101,8 +101,8 @@ if IN_COLAB:
         if not _is_kaggle_cli_installed():
           raise Exception("Kaggle CLI is not installed. Please install it using `pip install kaggle`.")
 
-        mkdir(mountpoint_gdrive_dataset_path)
-        os.chdir(mountpoint_gdrive_dataset_path)
+        mkdir(gdrive_dataset_path)
+        os.chdir(gdrive_dataset_path)
 
         try:
           subprocess.run(['kaggle', type.value, 'download', type.get_flag(), kaggle_dataset_url], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
@@ -110,22 +110,47 @@ if IN_COLAB:
         except subprocess.CalledProcessError as e:
           raise Exception(f"An error occurred while downloading the dataset: {e}")
 
-    def unzip_kaggle_dataset(mountpoint_gdrive_dataset_dir, destination_directory = "/content/dataset"):
-        # Exécuter la commande unzip via subprocess
-        subprocess.run(["unzip", mountpoint_gdrive_dataset_dir, "-d", destination_directory])
-
     def download_kaggle_dataset(
         kaggle_dataset_url,
-        type                     = DatasetType.DATASETS,
-        mountpoint_gdrive_path   = '/content/gdrive',
-        mountpoint_gdrive_dataset_path = '/content/gdrive/My Drive/dataset',
-        kaggle_config_dir        = '/content/gdrive/My Drive/Kaggle'
+        type                = DatasetType.DATASETS,
+        gdrive_path         = '/content/gdrive',
+        gdrive_dataset_path = '/content/gdrive/My Drive/dataset',
+        kaggle_config_dir   = '/content/gdrive/My Drive/Kaggle'
     ):
+        """
+        Downloads a Kaggle dataset to a specified Google Drive directory.
+
+        Parameters:
+        - kaggle_dataset_url : str
+            URL of the Kaggle dataset to download.
+        - type : (DatasetType, optional)
+            Type of Kaggle dataset (e.g., competitions, datasets).
+        - mountpoint_gdrive_path : (str, optional)
+            Mount point path for Google Drive.
+        - mountpoint_gdrive_dataset_path : (str, optional)
+            Path in Google Drive where the dataset will be saved.
+        - kaggle_config_dir : (str, optional)
+            Directory where Kaggle API credentials are stored.
+
+        Returns:
+        - None
+
+        Example usage:
+        ```python
+        kaggle_dataset_url = "kaggle_url"
+        download_kaggle_dataset(
+            kaggle_dataset_url,
+            DatasetType.COMPETITIONS
+        )
+        ```
+
+        Note: Make sure to have your Kaggle API credentials in the specified `kaggle_config_dir`.
+        """
         try:
-            gdrive_mount(mountpoint_gdrive_path)
+            gdrive_mount(gdrive_path)
             _install_kaggle_library()
             _set_environ_kaggle_config(kaggle_config_dir)
-            _download(kaggle_dataset_url, mountpoint_gdrive_dataset_path, type)
+            _download(kaggle_dataset_url, gdrive_dataset_path, type)
             print("Dataset downloaded successfully!")
 
         except Exception as e:
