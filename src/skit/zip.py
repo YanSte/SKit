@@ -1,6 +1,10 @@
 import subprocess
 
-def unzip_specific_files(zip_file_path, destination_directory, specific_files=None):
+def unzip_specific_files(
+    zip_file_path,
+    destination_directory,
+    specific_files=None
+):
     """
     Unzips specific files or folders from a ZIP archive.
 
@@ -13,7 +17,12 @@ def unzip_specific_files(zip_file_path, destination_directory, specific_files=No
     ```python
     zip_file_path = "/path/to/archive.zip"
     destination_directory = "/path/to/destination/"
-    specific_files = ["file1", "file2", "folder1/"]
+    specific_files = [
+        "file1.txt",
+        "file2.csv",
+        "folder1/*"
+    ]
+
     unzip_specific_files(zip_file_path, destination_directory, specific_files)
     ```
     """
