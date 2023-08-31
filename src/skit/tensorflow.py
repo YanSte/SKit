@@ -1,6 +1,4 @@
-# ==============================
-#           TensorFlow
-# ==============================
+from skit.config import IS_TENSORFLOW_IMPORTED
 
 if IS_TENSORFLOW_IMPORTED:
     import tensorflow as tf
