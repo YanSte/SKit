@@ -44,7 +44,7 @@ if IN_COLAB:
         if result.returncode != 0:
           raise Exception("Error on install Kaggle.")
 
-    def gdrive_mount(gdrive_path):
+    def gdrive_mount(gdrive_path = '/content/gdrive'):
         """
         Mounts the Google Drive to Colab
 
