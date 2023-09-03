@@ -6,7 +6,7 @@ from IPython.display import display
 from skit.show import show_text, show_history
 
 class ModelMetrics:
-    def __init__(self, versions):
+    def __init__(self, versions, accuracy_to_monitor = "val_accuracy"):
         """
         Initialize the ModelMetrics.
 
@@ -16,6 +16,7 @@ class ModelMetrics:
             A list of model version names to track performance for.
         """
         self.output = {}
+        self.accuracy_to_monitor = "val_accuracy"
         for version in versions:
             self.output[version] = {
                 "history":         None,
@@ -56,7 +57,7 @@ class ModelMetrics:
         history = self.output[version]['history'].history
 
         # Find the index of the best validation accuracy
-        best_val_index = np.argmax(history['val_accuracy'])
+        best_val_index = np.argmax(history[self.accuracy_to_monitor])
 
         # Get the training accuracy at the epoch of the best validation accuracy
         best_train_accuracy = history['accuracy'][best_val_index]
