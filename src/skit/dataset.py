@@ -265,8 +265,9 @@ def stratifiedTrainValidSplit(df, x_feature_columns, y_target_columns, num_split
     # Separate into train and valid DataFrames and reset index
     train_df = df[df.Fold == "train"].reset_index(drop=True)
     valid_df = df[df.Fold == "valid"].reset_index(drop=True)
-    
-    df.drop(columns=['Fold'], inplace=True)
+
+    train_df.drop(columns=['Fold'], inplace=True)
+    valid_df.drop(columns=['Fold'], inplace=True)
 
     return train_df, valid_df
 
