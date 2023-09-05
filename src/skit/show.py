@@ -11,7 +11,7 @@ from IPython.display import display,Image,Markdown,HTML
 from skit.config import IS_TENSORFLOW_IMPORTED
 
 # ==============================
-#           Show
+#           Text
 # ==============================
 
 def show_text(heading_level, text="", add_indent=True):
@@ -72,6 +72,10 @@ def show_text(heading_level, text="", add_indent=True):
 
     if add_indent:
         print("\n")
+
+# ==============================
+#           History
+# ==============================
 
 def show_history(
     history,
@@ -136,6 +140,10 @@ def show_history(
             plt.plot(history.history[metric_name], label=curve_label)
         plt.legend(loc='upper left')
         plt.show()
+
+# ==============================
+#           Image
+# ==============================
 
 def show_images(
     x,
@@ -268,6 +276,9 @@ def show_images(
 
     plt.show()
 
+# ==============================
+#           Donut
+# ==============================
 
 def show_donut(
     values,
@@ -313,6 +324,10 @@ def show_donut(
         plt.title(title)
     plt.tight_layout()
     plt.show()
+
+# ==============================
+#      Confusion Matrix
+# ==============================
 
 def show_confusion_matrix(
     y_true,
@@ -391,6 +406,44 @@ def show_confusion_matrix(
     plt.xlabel('Predicted label\naccuracy={:0.4f}; misclass={:0.4f}'.format(accuracy, misclass))
     plt.show()
 
+# ==============================
+#          Histogram
+# ==============================
+
+def show_histogram(
+    data,
+    bins=10,
+    range=None,
+    xlabel=None,
+    ylabel=None,
+    title=None,
+    alpha=1.0,
+    color='lightsteelblue',
+    edgecolor='black'
+):
+    """
+    Plot a histogram.
+
+    Args:
+        data (list or Series): The data to create the histogram from.
+        bins (int or sequence, optional): The number of bins or the specific bin edges.
+        range (tuple, optional): The range of values to consider for the histogram.
+        xlabel (str, optional): Label for the x-axis.
+        ylabel (str, optional): Label for the y-axis.
+        title (str, optional): Title for the histogram.
+        alpha (float, optional): Transparency of the bars (0.0 to 1.0).
+        color (str, optional): Color of the bars.
+    """
+    plt.hist(data, bins=bins, range=range, alpha=alpha, color=color, edgecolor=edgecolor)
+
+    if xlabel:
+        plt.xlabel(xlabel)
+    if ylabel:
+        plt.ylabel(ylabel)
+    if title:
+        plt.title(title)
+
+    plt.show()
 
 # ==============================
 #           TensorFlow
