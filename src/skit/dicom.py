@@ -308,6 +308,13 @@ if IS_PYDICOM_IMPORTED:
         # Show
         # -------- #
 
+        def _show_scan(self, scan_category, images, color_map):
+            if self.image_format == ImageFormat.WHDC:
+                images = ImageFormat.swap_dimensions(images, ImageFormat.DWHC)
+
+            show_text("h4", scan_category)
+            show_images(images, color_map=color_map)
+
         def show(self, row, scan_category, color_map='gray'):
             """
             Displays the images for a given row and scan category.
@@ -323,11 +330,8 @@ if IS_PYDICOM_IMPORTED:
 
             """
             images = self.load_scan(row, scan_category)
-            if self.image_format == ImageFormat.WHDC:
-                images = ImageFormat.swap_dimensions(images, ImageFormat.DWHC)
+            self._show_scan(scan_category, images, color_map)
 
-            show_text("h4", scan_category)
-            show_images(images, color_map=color_map)
 
         def show_all(self, row, color_map='gray'):
             """
@@ -341,8 +345,9 @@ if IS_PYDICOM_IMPORTED:
                 The color map to use for displaying the images.
 
             """
-            for scan_category in self.scan_categories:
-                self.show(row, scan_category, color_map)
+            loaders_images = self.load_all_scans(row)
+            for scan_category, images in loaders_images.items():
+                self._show_scan(scan_category, images, color_map)
 
         # Overriding the summary method
         def summary(self, train_dataset=None):
