@@ -25,6 +25,7 @@ if IS_PYDICOM_IMPORTED:
         from tqdm import tqdm
         from skit.Summarizable import Summarizable
         from skit.show import show_text, show_images
+        from skit.InternalDebug import InternalDebug
 
     except ImportError:
         print(f"Missing some imports: {ImportError}")
@@ -79,7 +80,8 @@ if IS_PYDICOM_IMPORTED:
             label_column_name               = "Label",
             image_format                    = ImageFormat.WHDC,
             max_threads                     = 8,
-            image_file_sorter               = lambda x: int(x[:-4].split("-")[-1])
+            image_file_sorter               = lambda x: int(x[:-4].split("-")[-1]),
+            debug_mode                      = False
         ):
             """
             This class is designed for loading DICOM images from a given directory and
@@ -117,6 +119,8 @@ if IS_PYDICOM_IMPORTED:
             image_file_sorter : function, optional
                 A function used to sort image files. Default sorts by numeric value
                 at the end of the filename.
+            debug_mode: bool
+                Debug mode
 
             Raises:
             -------
@@ -148,6 +152,7 @@ if IS_PYDICOM_IMPORTED:
             self.__image_format        = image_format
             self.__image_file_sorter   = image_file_sorter
             self.__enable_center_focus = enable_center_focus
+            self.__debug               = InternalDebug(debug_mode=debug_mode)
 
         # ---------------- #
         # Public
@@ -257,6 +262,7 @@ if IS_PYDICOM_IMPORTED:
             list
                 A list of loaded images.
             """
+            self.__debug.log("== load_scan ==")
             # Get the patient ID and construct the scan path
             # ----
             patient_id = str(self.__df.loc[row, self.__id_column_name]).zfill(5)
@@ -339,6 +345,7 @@ if IS_PYDICOM_IMPORTED:
             dict
                 A dictionary containing all loaded images, categorized by scan type.
             """
+            self.__debug.log("== load_all_scans ==")
             # Initialize an empty dictionary to store images for each MRI type
             # ----
             all_images = {}
@@ -430,7 +437,7 @@ if IS_PYDICOM_IMPORTED:
             # Get the value of self.__scan_categories[0]
             # ----
             scan_category = self.__scan_categories[0]
-            
+
             if scan_category is not None:
                 images = self.load_scan(0, scan_category)
                 print("\n")
@@ -480,6 +487,7 @@ if IS_PYDICOM_IMPORTED:
             4. Crops the image to focus on the region of interest.
             5. Resizes the image to the specified dimensions.
             """
+            self.__debug.log("== _load_dicom_image ==")
             # Check if the DICOM file exists
             # ----
             if not os.path.exists(dicom_path):
@@ -495,6 +503,7 @@ if IS_PYDICOM_IMPORTED:
             # Get image array
             # ----
             image = dicom_file.pixel_array
+            self.__debug.log("Pixel array shape:", image.shape)
 
             # Rotate
             # ----
@@ -514,7 +523,12 @@ if IS_PYDICOM_IMPORTED:
 
             # Chanel
             # ----
-            return np.expand_dims(image, axis=-1)
+            image = np.expand_dims(image, axis=-1)
+
+            self.__debug.log("Is normalized: ", self._is_normalized(image))
+            self.__debug.log("Image shape: ", image.shape)
+
+            return image
 
         def _resize_img(self, image):
             w, h = self.__size
@@ -641,3 +655,10 @@ if IS_PYDICOM_IMPORTED:
 
             else:
                 return image_files
+
+
+        def _is_normalized(self, image):
+            min_value = np.min(image)
+            max_value = np.max(image)
+
+            return min_value >= 0.0 and max_value <= 255
