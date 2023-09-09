@@ -27,21 +27,69 @@ import pandas as pd
 import numpy as np
 import time
 
+from enum import Enum
 from IPython.display import display
 from skit.show import show_text, show_history
 
-class ModelMetrics:
-    def __init__(self, versions, accuracy_to_monitor = "val_accuracy"):
-        """
-        Initialize the ModelMetrics.
+class Metric(Enum):
+    ACCURACY = "accuracy"
+    AUC = "auc"
+    VAL_AUC = "val_auc"
+    VAL_ACCURACY = "val_accuracy"
 
-        Parameters
-        ----------
-        versions : list
-            A list of model version names to track performance for.
+    @property
+    def train_metric_key(self):
+        return self.value
+
+    @property
+    def val_metric_key(self):
+        if self == Metric.ACCURACY:
+            return "val_accuracy"
+        elif self == Metric.AUC:
+            return "val_auc"
+        elif self == Metric.VAL_AUC:
+            return "val_auc"
+        elif self == Metric.VAL_ACCURACY:
+            return "val_accuracy"
+
+    @property
+    def plot_labels(self):
         """
+        Get the curve labels corresponding to the given Metric enum.
+
+        Parameters:
+        metric_enum (Metric): The Metric enum value.
+
+        Returns:
+        dict: A dictionary mapping curve labels to metric names.
+        """
+        if self == Metric.ACCURACY or self == Metric.VAL_ACCURACY:
+            return {
+                'Accuracy': {
+                    'Training Accuracy': 'accuracy',
+                    'Validation Accuracy': 'val_accuracy'
+                },
+                'Loss': {
+                    'Training Loss': 'loss',
+                    'Validation Loss': 'val_loss'
+                }
+            }
+        elif self == Metric.AUC or self == Metric.VAL_AUC:
+            return {
+                'Accuracy': {
+                    'Training AUC': 'auc',
+                    'Validation AUC': 'val_auc'
+                },
+                'Loss': {
+                    'Training Loss': 'loss',
+                    'Validation Loss': 'val_loss'
+                }
+            }
+
+class ModelMetrics:
+    def __init__(self, versions, metric_to_monitor=Metric.ACCURACY):
         self.output = {}
-        self.accuracy_to_monitor = "val_accuracy"
+        self.metric_to_monitor = metric_to_monitor
         for version in versions:
             self.output[version] = {
                 "history":         None,
@@ -65,56 +113,45 @@ class ModelMetrics:
             for version in self.output.keys():
                 self.output[version] = default_dict.copy()
 
-    def get_best_accuracy(self, version):
-        """
-        Get the best training and validation accuracy for the specified model version.
-
-        Parameters
-        ----------
-        version : str
-            The name of the model version for which to get the accuracy score.
-
-        Returns
-        -------
-        dict
-            A dictionary containing the best training and validation accuracy.
-        """
+    def get_best_metric(self, version):
         history = self.output[version]['history'].history
 
-        # Find the index of the best validation accuracy
-        best_val_index = np.argmax(history[self.accuracy_to_monitor])
+        train_metric_key = self.metric_to_monitor.train_metric_key
+        val_metric_key = self.metric_to_monitor.val_metric_key
 
-        # Get the training accuracy at the epoch of the best validation accuracy
-        best_train_accuracy = history['accuracy'][best_val_index]
-
-        # Get the best validation accuracy
-        best_val_accuracy = history['val_accuracy'][best_val_index]
+        best_val_index = np.argmax(history[train_metric_key])
+        best_train_metric = history[train_metric_key][best_val_index]
+        best_val_metric = history[val_metric_key][best_val_index]
 
         return {
-            'best_train_accuracy': best_train_accuracy,
-            'best_val_accuracy': best_val_accuracy,
+            f'best_train_{self.metric_to_monitor.name.lower()}': best_train_metric,
+            f'best_val_{self.metric_to_monitor.name.lower()}': best_val_metric,
         }
 
     def get_best_report(self, version):
         """
-        Get the best report for the specified model version.
+        Get the best model report for a specific model version.
 
         Parameters
         ----------
         version : str
-            The name of the model version for which to get the accuracy score.
+            The model version for which to get the best model report.
 
         Returns
         -------
-        pandas.DataFrame
-            A dictionary containing the best report.
+        dict or None
+            The best model report containing training and validation metrics, duration, and paths.
+            Returns None if the specified version is not found in the output.
         """
-        metrics = self.get_best_accuracy(version)
+        if version not in self.output:
+            return None
+
+        metrics = self.get_best_metric(version)
 
         return {
             'version': version,
-            'best_train_accuracy': metrics['best_train_accuracy'],
-            'best_val_accuracy': metrics['best_val_accuracy'],
+            f'best_train_{self.metric_to_monitor.name.lower()}': metrics[f'best_train_{self.metric_to_monitor.name.lower()}'],
+            f'best_val_{self.metric_to_monitor.name.lower()}': metrics[f'best_val_{self.metric_to_monitor.name.lower()}'],
             'duration': self.output[version]['duration'],
             'best_model_path': self.output[version]['best_model_path'],
             'board_path': self.output[version]['board_path'],
@@ -125,10 +162,12 @@ class ModelMetrics:
         Display a tabular report of the best model performance.
         """
         # Initialize the report DataFrame
-        df = pd.DataFrame(columns=['version', 'best_train_accuracy', 'best_val_accuracy', 'duration', 'best_model_path', 'board_path'])
+        columns = ['version', f'best_train_{self.metric_to_monitor.name.lower()}', f'best_val_{self.metric_to_monitor.name.lower()}', 'duration', 'best_model_path', 'board_path']
+
+        df = pd.DataFrame(columns=columns)
 
         for version in self.output.keys():
-            # Get the best training and validation accuracy for this version
+            # Get the best training and validation metric for this version
             report = self.get_best_report(version)
 
             # Add the data to the DataFrame
@@ -137,34 +176,43 @@ class ModelMetrics:
         # Set 'version' as the index of the DataFrame
         df.set_index('version', inplace=True)
 
-        # Apply formatting to the duration and accuracy columns
+        # Apply formatting to the duration and metric columns
         df['duration'] = df['duration'].apply(lambda x: "{:.2f}".format(x))
-        df[['best_train_accuracy', 'best_val_accuracy']] = df[['best_train_accuracy', 'best_val_accuracy']].applymap(lambda x: "{:.2f}%".format(x*100))
 
-        # Highlight the maximum in the 'best_val_accuracy' column
-        styled_df = df.style.highlight_max(subset=['best_val_accuracy'], color='lightgreen')
+        metric_columns = [f'best_train_{self.metric_to_monitor.name.lower()}', f'best_val_{self.metric_to_monitor.name.lower()}']
+        df[metric_columns] = df[metric_columns].applymap(lambda x: "{:.2f}".format(x*100) if self.metric_to_monitor != Metric.VAL_ACCURACY else "{:.2f}%".format(x))
+
+        # Highlight the maximum in the metric column
+        styled_df = df.style.highlight_max(subset=[f'best_val_{self.metric_to_monitor.name.lower()}'], color='lightgreen')
 
         # Display the report
         display(styled_df)
 
+
     def show_best_result(self, version):
         """
-        Display the result (best train accuracy, best validation accuracy and duration) for a specific model version.
+        Display the result (best train metric, best validation metric, and duration) for a specific model version.
 
         Parameters
         ----------
         version : str
             The model version for which the result will be displayed.
         """
+        if version not in self.output:
+            show_text("b", f"No result available for {version}")
+
         result = self.get_best_report(version)
 
         if result is not None:
-            best_train_accuracy = result.get('best_train_accuracy', None)
-            best_val_accuracy = result.get('best_val_accuracy', None)
+            best_train_metric = result.get(f'best_train_{self.metric_to_monitor.name.lower()}', None)
+            best_val_metric = result.get(f'best_val_{self.metric_to_monitor.name.lower()}', None)
             duration = result.get('duration', None)
 
-            if best_train_accuracy is not None and best_val_accuracy is not None and duration is not None:
-                show_text("b", f"Train Accuracy = {best_train_accuracy * 100:.2f}% - Validation Accuracy = {best_val_accuracy * 100:.2f}% - Duration = {duration:.2f}")
+            metric_name = self.metric_to_monitor.name.lower()
+            metric_suffix = '%' if self.metric_to_monitor != Metric.VAL_ACCURACY else ''
+
+            if best_train_metric is not None and best_val_metric is not None and duration is not None:
+                show_text("b", f"Train {metric_name.capitalize()} = {best_train_metric * 100:.2f}{metric_suffix} - Validation {metric_name.capitalize()} = {best_val_metric * 100:.2f}{metric_suffix} - Duration = {duration:.2f}")
             else:
                 show_text("b", f"Result not available for version {version}")
         else:
@@ -240,11 +288,17 @@ class ModelMetrics:
         figsize=(8,6)
     ):
         history = self.output[version]['history']
-        display(show_history(history, figsize = figsize))
+        plot = self.metric_to_monitor.plot_labels
+        display(show_history(history, figsize=figsize, plot=plot))
 
-    def get_best_model_path(self):
+    def get_best_model_path(self, version):
         """
         Get the path of the best model based on accuracy.
+
+        Parameters
+        ----------
+        version : str
+            The name of the model version for which to get the best model path.
 
         Returns
         -------
@@ -252,15 +306,10 @@ class ModelMetrics:
             The path of the best model based on the highest accuracy score.
             Returns None if no model has been added or no best model path is available.
         """
-        best_accuracy = -1
-        best_model_path = None
+        report = self.get_best_report(version)
+        best_model_path = report.get('best_model_path')
 
-        for version, metrics in self.output.items():
-            accuracy = self.get_best_accuracy(version).get('best_val_accuracy', None)
-            model_path = metrics.get('best_model_path', None)
-
-            if accuracy is not None and model_path is not None and accuracy > best_accuracy:
-                best_accuracy = accuracy
-                best_model_path = model_path
-
-        return best_model_path
+        if best_model_path is not None:
+            return best_model_path
+        else:
+            return None
