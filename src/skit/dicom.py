@@ -164,7 +164,7 @@ if IS_PYDICOM_IMPORTED:
                 if col not in df.columns:
                     raise ValueError(f"Columns {col} must be in dataset")
 
-            self.__df                  = df
+            self.__df                  = df.copy()
             self.__num_imgs            = num_imgs
             self.__id_column_name      = id_column_name
             self.__label_column_name   = label_column_name
