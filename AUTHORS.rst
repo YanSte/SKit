@@ -2,4 +2,4 @@
 Contributors
 ============
 
-* Yannick Stephan <stephan.yannick@me.com>
+* YanSte <stephan.yannick [|At} me.com>
