@@ -58,6 +58,7 @@ if IS_PYDICOM_IMPORTED:
             if image_format == ImageFormat.DWHC:
                 # Permutation: (128, 128, 64, 1) vers (64, 128, 128, 1)
                 image = np.transpose(image, (2, 1, 0, 3))
+
             elif image_format == ImageFormat.WHDC:
                 # Permutation: (64, 128, 128, 1) vers (128, 128, 64, 1)
                 image = np.transpose(image, (2, 1, 0, 3))
@@ -66,21 +67,64 @@ if IS_PYDICOM_IMPORTED:
 
     class DICOMLoader(Summarizable):
         def __init__(self,
-                     df,
-                     input_path,
-                     scan_categories,
-                     num_imgs                        = None,
-                     size                            = (224, 224),
-                     scale                           = 1.0,
-                     rotate_angle                    = 0,
-                     enable_center_focus             = False,
-                     enable_monochrome_normalization = False,
-                     id_column_name                  = "ID",
-                     label_column_name               = "Label",
-                     image_format                    = ImageFormat.WHDC,
-                     max_threads                     = 8,
-                     image_file_sorter               = lambda x: int(x[:-4].split("-")[-1])
-                    ):
+            df,
+            input_path,
+            scan_categories,
+            num_imgs                        = None,
+            size                            = (224, 224),
+            scale                           = 1.0,
+            rotate_angle                    = 0,
+            enable_center_focus             = False,
+            id_column_name                  = "ID",
+            label_column_name               = "Label",
+            image_format                    = ImageFormat.WHDC,
+            max_threads                     = 8,
+            image_file_sorter               = lambda x: int(x[:-4].split("-")[-1])
+        ):
+            """
+            This class is designed for loading DICOM images from a given directory and
+            creating a dataset for medical image analysis.
+
+            Parameters:
+            -----------
+            df : DataFrame
+                The DataFrame containing metadata and labels for DICOM images.
+            input_path : str
+                The path to the directory containing DICOM image files.
+            scan_categories : list
+                A list of scan categories to include in the dataset.
+            num_imgs : int, optional
+                The number of images to load per scan. If specified, must be divisible
+                by 2 when 'enable_center_focus' is True. Default is None.
+            size : tuple, optional
+                The size to which images should be resized. Default is (224, 224).
+            scale : float, optional
+                The scaling factor applied to the images. Default is 1.0.
+            rotate_angle : int, optional
+                The angle in degrees by which images should be rotated. Default is 0.
+            enable_center_focus : bool, optional
+                If True, focus on the central images when 'num_imgs' is specified.
+                Default is False.
+            id_column_name : str, optional
+                The name of the column containing unique IDs in 'df'. Default is "ID".
+            label_column_name : str, optional
+                The name of the column containing labels in 'df'. Default is "Label".
+            image_format : ImageFormat, optional
+                The format of the DICOM images (e.g., ImageFormat.WHDC). Default is
+                ImageFormat.WHDC.
+            max_threads : int, optional
+                The maximum number of threads to use for image loading. Default is 8.
+            image_file_sorter : function, optional
+                A function used to sort image files. Default sorts by numeric value
+                at the end of the filename.
+
+            Raises:
+            -------
+            ValueError
+                - If 'num_imgs' is not divisible by 2 when 'enable_center_focus' is True.
+                - If 'rotate_angle' is not in the range [0, 360].
+                - If 'id_column_name' or 'label_column_name' is not in 'df.columns'.
+            """
             if num_imgs is not None and num_imgs % 2 != 0 and enable_center_focus:
                 raise ValueError("num_imgs must be divisible by 2 for central image")
 
@@ -91,28 +135,45 @@ if IS_PYDICOM_IMPORTED:
                 if col not in df.columns:
                     raise ValueError(f"Columns {col} must be in dataset")
 
-            self.df                  = df
-            self.num_imgs            = num_imgs
-            self.id_column_name      = id_column_name
-            self.label_column_name   = label_column_name
-            self.input_path          = input_path
-            self.scan_categories     = scan_categories
-            self.max_threads         = max_threads
-            self.size                = size
-            self.scale               = scale
-            self.rotate_angle        = rotate_angle
-            self.image_format        = image_format
-            self.image_file_sorter   = image_file_sorter
-            self.enable_center_focus = enable_center_focus
+            self.__df                  = df
+            self.__num_imgs            = num_imgs
+            self.__id_column_name      = id_column_name
+            self.__label_column_name   = label_column_name
+            self.__input_path          = input_path
+            self.__scan_categories     = scan_categories
+            self.__max_threads         = max_threads
+            self.__size                = size
+            self.__scale               = scale
+            self.__rotate_angle        = rotate_angle
+            self.__image_format        = image_format
+            self.__image_file_sorter   = image_file_sorter
+            self.__enable_center_focus = enable_center_focus
 
         # ---------------- #
-        # Public methods
+        # Public
         # ---------------- #
 
         # -------- #
-        # Info
+        # Property
         # -------- #
 
+        @property
+        def scan_categories(self):
+            return self.__scan_categories
+
+        @property
+        def num_imgs(self):
+            return self.__num_imgs
+
+        @property
+        def image_format(self):
+            return self.__image_format
+
+        @property
+        def df(self):
+            return self.__df.copy()
+
+        @property
         def len(self):
             """
             Returns the length of the DataFrame.
@@ -122,8 +183,11 @@ if IS_PYDICOM_IMPORTED:
             int
                 The number of rows in the DataFrame.
             """
-            return len(self.df)
+            return len(self.__df)
 
+        # -------- #
+        # Get
+        # -------- #
 
         def get_id(self, row):
             """
@@ -139,7 +203,7 @@ if IS_PYDICOM_IMPORTED:
             str
                 The ID corresponding to the row.
             """
-            return self.df.loc[row, self.id_column_name]
+            return self.__df.loc[row, self.__id_column_name]
 
         def gel_label(self, row):
             """
@@ -155,7 +219,21 @@ if IS_PYDICOM_IMPORTED:
             str
                 The label corresponding to the row.
             """
-            return self.df.loc[row, self.label_column_name]
+            return self.__df.loc[row, self.__label_column_name]
+
+        # -------- #
+        # Format
+        # -------- #
+
+        def format(self, images, type):
+            if type == "normalize" and self.image_format == ImageFormat.WHDC:
+                return ImageFormat.swap_dimensions(images, ImageFormat.DWHC)
+
+            elif type == "default" and self.image_format == ImageFormat.WHDC:
+                return ImageFormat.swap_dimensions(images, ImageFormat.WHDC)
+
+            else:
+                return images
 
         # -------- #
         # Load
@@ -181,8 +259,8 @@ if IS_PYDICOM_IMPORTED:
             """
             # Get the patient ID and construct the scan path
             # ----
-            patient_id = str(self.df.loc[row, self.id_column_name]).zfill(5)
-            scans_path = os.path.join(self.input_path, patient_id, scan_category)
+            patient_id = str(self.__df.loc[row, self.__id_column_name]).zfill(5)
+            scans_path = os.path.join(self.__input_path, patient_id, scan_category)
 
             # Check if the scan path exists
             # ----
@@ -193,7 +271,7 @@ if IS_PYDICOM_IMPORTED:
             # ----
             image_files = sorted(
                 glob.glob(os.path.join(scans_path, "*")),
-                key = self.image_file_sorter
+                key = self.__image_file_sorter
             )
 
             # Check if any image files were found
@@ -211,7 +289,7 @@ if IS_PYDICOM_IMPORTED:
 
             # Load images using ThreadPoolExecutor
             # ----
-            with ThreadPoolExecutor(self.max_threads) as executor:
+            with ThreadPoolExecutor(self.__max_threads) as executor:
                 image_data_iterable = executor.map(self._load_dicom_image, image_files)
 
                 # Show progress if enabled
@@ -232,15 +310,14 @@ if IS_PYDICOM_IMPORTED:
 
             # Fill up the list to num_imgs if necessary
             # ----
-            if self.num_imgs is not None:
-                while len(loaded_images) < self.num_imgs:
+            if self.__num_imgs is not None:
+                while len(loaded_images) < self.__num_imgs:
                     zero_image = np.zeros_like(loaded_images[0])
                     loaded_images.append(zero_image)
 
             loaded_images = np.array(loaded_images)
-            loaded_images = ImageFormat.swap_dimensions(loaded_images, self.image_format)
 
-            return loaded_images
+            return self.format(loaded_images, "default")
 
         def load_all_scans(
             self,
@@ -268,20 +345,20 @@ if IS_PYDICOM_IMPORTED:
 
             # Use a ThreadPoolExecutor to load images for each MRI type concurrently
             # ----
-            with ThreadPoolExecutor(self.max_threads) as executor:
+            with ThreadPoolExecutor(self.__max_threads) as executor:
                 future_to_scan_category = {
                     executor.submit(
                         self.load_scan,
                         row,
                         scan_category,
                         False
-                    ): scan_category for scan_category in self.scan_categories
+                    ): scan_category for scan_category in self.__scan_categories
                 }
 
                 # Initialize a tqdm progress bar
                 # ----
                 if show_progress:
-                    progress_bar = tqdm(total=len(self.scan_categories), desc="Loading scan types")
+                    progress_bar = tqdm(total=len(self.__scan_categories), desc="Loading scan types")
 
                 # As each task completes, store the loaded images in the all_images dictionary and update the progress bar
                 # ----
@@ -301,18 +378,15 @@ if IS_PYDICOM_IMPORTED:
 
             # Ordering by categories
             # ----
-            all_images = {key: all_images.get(key, []) for key in self.scan_categories}
-            return all_images
+            return {key: all_images.get(key, []) for key in self.__scan_categories}
 
         # -------- #
         # Show
         # -------- #
 
         def _show_scan(self, scan_category, images, color_map):
-            if self.image_format == ImageFormat.WHDC:
-                images = ImageFormat.swap_dimensions(images, ImageFormat.DWHC)
-
-            show_text("h4", scan_category)
+            images = self.format(images, "normalize")
+            show_text("h4", scan_category, False)
             show_images(images, color_map=color_map)
 
         def show(self, row, scan_category, color_map='gray'):
@@ -353,26 +427,23 @@ if IS_PYDICOM_IMPORTED:
         def summary(self, train_dataset=None):
             super().summary()
             print("Additional summary details specific:")
-            # Get the value of self.scan_categories[0]
+            # Get the value of self.__scan_categories[0]
             # ----
-            scan_category = self.scan_categories[0]
-            size = self.len()
-
+            scan_category = self.__scan_categories[0]
+            
             if scan_category is not None:
                 images = self.load_scan(0, scan_category)
                 print("\n")
 
                 if images is not None:
-                    print("Size:", size)
+                    print("Size:", self.len)
                     print("Images Shape:", images.shape)
 
                 else:
                     print("Error: Loading images are empty.")
             else:
                 print("Error: scan_category is empty.")
-            print("=" * 40)
-
-
+            print("=" * 50)
 
         # ---------------- #
         # Private methods
@@ -423,44 +494,42 @@ if IS_PYDICOM_IMPORTED:
 
             # Get image array
             # ----
-            image_array = dicom_file.pixel_array
+            image = dicom_file.pixel_array
 
             # Rotate
             # ----
-            image_array = self._rotate_img(image_array)
+            image = self._rotate_img(image)
 
             # Normalization
             # ----
-            image_array = self._normalization_img(image_array)
+            image = self._normalization_img(image)
 
             # Crop
             # ----
-            image_array = self._crop_img(image_array)
+            image = self._crop_img(image)
 
             # Resize
             # ----
-            image_array = self._resize_img(image_array)
+            image = self._resize_img(image)
 
             # Chanel
             # ----
-            image_array = np.expand_dims(image_array, axis=-1)
+            return np.expand_dims(image, axis=-1)
 
-            return image_array
-
-        def _resize_img(self, image_array):
-            w, h = self.size
+        def _resize_img(self, image):
+            w, h = self.__size
 
             # Resize
             # ----
-            return cv2.resize(image_array, (w, h), interpolation = cv2.INTER_AREA)
+            return cv2.resize(image, (w, h), interpolation = cv2.INTER_AREA)
 
-        def _crop_img(self, image_array):
+        def _crop_img(self, image):
             """
             Crops and resizes a given image.
 
             Parameters
             ----------
-            image_array : 2D array
+            image : 2D array
                 The image to be cropped and resized.
 
             Returns
@@ -468,13 +537,18 @@ if IS_PYDICOM_IMPORTED:
             2D array
                 The cropped and resized image.
             """
+            # Skip if no crop
+            # ----
+            if self.__scale <= 0:
+                return image
+
             # Calculate the center of the image
             # ----
-            center_x, center_y = image_array.shape[1] / 2, image_array.shape[0] / 2
+            center_x, center_y = image.shape[1] / 2, image.shape[0] / 2
 
             # Calculate the dimensions of the scaled image
             # ----
-            width_scaled, height_scaled = image_array.shape[1] * self.scale, image_array.shape[0] * self.scale
+            width_scaled, height_scaled = image.shape[1] * self.__scale, image.shape[0] * self.__scale
 
             # Calculate the coordinates for cropping the image
             # ----
@@ -483,17 +557,15 @@ if IS_PYDICOM_IMPORTED:
 
             # Crop the image using the calculated coordinates
             # ----
-            img_cropped = image_array[int(top_y):int(bottom_y), int(left_x):int(right_x)]
+            return image[int(top_y):int(bottom_y), int(left_x):int(right_x)]
 
-            return img_cropped
-
-        def _rotate_img(self, image_array):
+        def _rotate_img(self, image):
           """
           Rotates the image array by the specified angle.
 
           Parameters
           ----------
-          image_array : ndarray
+          image : ndarray
               The original image array.
 
           Returns
@@ -501,27 +573,26 @@ if IS_PYDICOM_IMPORTED:
           ndarray
               The rotated image array.
           """
-          if self.rotate_angle != 0:
-            # Math of the rotation matrix
-            # ----
-            height, width = image_array.shape[:2]
-            center = (width / 2, height / 2)
-            rotation_matrix = cv2.getRotationMatrix2D(center, self.rotate_angle, 1.0)
+          if self.__rotate_angle <= 0:
+              return image
 
-            # Apply rotation
-            # ----
-            image_array = cv2.warpAffine(image_array, rotation_matrix, (width, height))
+          #    Math of the rotation matrix
+          # ----
+          height, width = image.shape[:2]
+          center = (width / 2, height / 2)
+          rotation_matrix = cv2.getRotationMatrix2D(center, self.__rotate_angle, 1.0)
 
-          return image_array
+          # Apply rotation
+          # ----
+          return cv2.warpAffine(image, rotation_matrix, (width, height))
 
-
-        def _normalization_img(self, image_array):
+        def _normalization_img(self, image):
             """
             Normalizes the image array to a range of 0 to 255.
 
             Parameters
             ----------
-            image_array : ndarray
+            image : ndarray
                 The original image array.
 
             Returns
@@ -529,20 +600,20 @@ if IS_PYDICOM_IMPORTED:
             ndarray
                 The normalized image array.
             """
-            min_val = np.min(image_array)
-            max_val = np.max(image_array)
+            min_val = np.min(image)
+            max_val = np.max(image)
 
             if max_val == 0:
                 # If max value is zero, return an array of zeros
                 # ----
-                return np.zeros_like(image_array).astype(np.uint8)
+                return np.zeros_like(image).astype(np.uint8)
 
             # Otherwise, proceed with normalization
             # ----
-            image_array = image_array - min_val
-            image_array = image_array / max_val
+            image = image - min_val
+            image = image / max_val
 
-            return (image_array * 255).astype(np.uint8)
+            return (image * 255).astype(np.uint8)
 
         def _select_subset_image_files(self, image_files):
             """
@@ -558,15 +629,15 @@ if IS_PYDICOM_IMPORTED:
             list
                 A subset of the original list of image files.
             """
-            if self.enable_center_focus and self.num_imgs is not None:
+            if self.__enable_center_focus and self.__num_imgs is not None:
                 middle = len(image_files) // 2
-                num_imgs2 = self.num_imgs // 2
+                num_imgs2 = self.__num_imgs // 2
                 p1 = max(0, middle - num_imgs2)
                 p2 = min(len(image_files), middle + num_imgs2)
                 return image_files[p1:p2]
 
-            elif self.num_imgs is not None:
-                return image_files[:self.num_imgs]
+            elif self.__num_imgs is not None:
+                return image_files[:self.__num_imgs]
 
             else:
                 return image_files
