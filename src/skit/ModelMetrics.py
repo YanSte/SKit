@@ -52,7 +52,7 @@ class Metric(Enum):
         if self == Metric.ACCURACY:
             return "val_accuracy"
         elif self == Metric.AUC:
-            return "val_auc"
+            return "auc"
         elif self == Metric.VAL_AUC:
             return "val_auc"
         elif self == Metric.VAL_ACCURACY:
@@ -76,7 +76,7 @@ class Metric(Enum):
             }
         elif self == Metric.AUC or self == Metric.VAL_AUC:
             return {
-                'Accuracy': {
+                'AUC': {
                     'Training AUC': 'auc',
                     'Validation AUC': 'val_auc'
                 },
