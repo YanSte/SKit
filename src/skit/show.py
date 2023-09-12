@@ -102,26 +102,59 @@ def show_text(heading_level, text="", add_indent=True):
 #           History
 # ==============================
 
+def show_best_history(
+    history,
+    metric="val_acc",
+    add_metric=["acc"]
+):
+    """
+    Summarize the best model performance based on training history.
+
+    Args:
+        history :dict
+            The training history dictionary returned by Keras.
+        primary_metric : str
+            The primary metric to monitor for the best value (default: "val_acc").
+        additional_metrics : list
+            List of additional metrics to extract complementary values (default: ["acc"]).
+    """
+    history = history.history
+
+    if metric not in history:
+        print(f"The metric '{metric}' not in history.")
+        return
+
+    for metric in add_metric:
+        if metric not in history:
+            print(f"The metric '{metric}' not in history.")
+            return
+
+    best_index = np.argmax(history[metric])
+    best_value = history[metric][best_index]
+
+    result = f"Best {metric}: {best_value} with "
+
+    for i, metric in enumerate(add_metric):
+        best_value = history[metric][best_index]
+        result += f"{metric}: {best_value}"
+        if i < len(add_metric) - 1:
+            result += ", "
+
+    show_text("b", result)
+
 def show_history(
     history,
-    figsize = (8,6),
-    plot = {
-        'Accuracy': {
-            'Training Accuracy': 'accuracy',
-            'Validation Accuracy': 'val_accuracy'
-        },
-        'Loss': {
-            'Training Loss': 'loss',
-            'Validation Loss': 'val_loss'
-        }
-    }
+    title = "Accurancy",
+    y_label = "Accurancy",
+    metrics = ["acc", "val_acc"],
+    metric_labels = ["Train Accurancy", "Validation Accurancy"],
+    figsize = (8,6)
 ):
     """
     Visualizes the training and validation metrics from the model's history using matplotlib.
 
-    The function generates separate plots for each main category (like 'Accuracy' and 'Loss')
-    defined in the `plot` parameter. For each main category, multiple curves (like 'Training Accuracy'
-    and 'Validation Accuracy') can be plotted based on the nested dictionary values.
+    The function generates separate plots for each metric defined in the `metrics` parameter.
+    It uses the corresponding labels provided in the `metric_labels` parameter for the plot legends.
 
     Parameters:
     -----------
@@ -129,42 +162,41 @@ def show_history(
         The history object typically returned from the .fit() method of a Keras model. It should
         have a 'history' attribute containing the training and validation metrics.
 
-    figsize : tuple, optional
-        The width and height in inches for the figure. Defaults to (8,6).
+    title : str, optional
+        The title for the plot. Defaults to "Accuracy".
 
-    plot : dict, optional
-        A nested dictionary defining the metrics to be plotted.
-        - The top-level key corresponds to the main category (e.g., 'Accuracy' or 'Loss').
-        - The associated nested dictionary's keys are the curve labels (e.g., 'Training Accuracy')
-          and the values are the corresponding metric names in the 'history' object (e.g., 'accuracy').
-        Defaults to plotting both training and validation accuracy and loss.
+    metrics : list of str, optional
+        A list of metric names to be plotted. Defaults to ["acc", "val_acc"].
+
+    metric_labels : list of str, optional
+        A list of labels for the plotted metrics. Should have the same length as `metrics`.
+        Defaults to ["Accuracy", "Validation Accuracy"].
+
+    figsize : tuple, optional
+        The width and height in inches for the figure. Defaults to (8, 6).
 
     Example:
     --------
     show_history(
         model_history,
-        figsize=(10,8),
-        plot={
-            "Titre A": {
-                "Legend Titre 1": "metric",
-                "Legend Titre 2": "metric"
-                }
-            }
+        title="Training and Validation Loss",
+        metrics=["loss", "val_loss"],
+        metric_labels=["Training Loss", "Validation Loss"],
+        figsize=(10, 8)
     )
     """
-    for title, curves in plot.items():
-        plt.figure(figsize=figsize)
-        plt.title(title)
+    history = history.history
+    plt.figure(figsize=figsize)
+    plt.title(title)
 
-        # Extracting the name from the first metric and capitalizing the first letter for ylabel
-        y_label = list(curves.values())[0].capitalize()
-        plt.ylabel(y_label)
-        plt.xlabel('Epoch')
+    plt.ylabel(y_label)
+    plt.xlabel('Epoch')
 
-        for curve_label, metric_name in curves.items():
-            plt.plot(history.history[metric_name], label=curve_label)
-        plt.legend(loc='upper left')
-        plt.show()
+    for metric_name, metric_label in zip(metrics, metric_labels):
+        plt.plot(history[metric_name], label=metric_label)
+
+    plt.legend(loc='upper left')
+    plt.show()
 
 # ==============================
 #           Image
@@ -470,9 +502,6 @@ def show_histogram(
 
     plt.show()
 
-# ==============================
-#           TensorFlow
-# ==============================
 
 if IS_TENSORFLOW_IMPORTED:
     import tensorflow as tf
