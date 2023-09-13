@@ -132,11 +132,11 @@ def show_best_history(
     best_index = np.argmax(history[metric])
     best_value = history[metric][best_index]
 
-    result = f"Best {metric}: {best_value} with "
+    result = f"Best {metric}: {best_value:.2f}  with "
 
     for i, metric in enumerate(add_metric):
         best_value = history[metric][best_index]
-        result += f"{metric}: {best_value}"
+        result += f"{metric}: {best_value:.2f} "
         if i < len(add_metric) - 1:
             result += ", "
 
@@ -186,6 +186,12 @@ def show_history(
     )
     """
     history = history.history
+
+    for metric in metrics:
+        if metric not in history:
+            print(f"The metric '{metric}' not in history.")
+            return
+
     plt.figure(figsize=figsize)
     plt.title(title)
 
@@ -482,14 +488,22 @@ def show_histogram(
     Plot a histogram.
 
     Args:
-        data (list or Series): The data to create the histogram from.
-        bins (int or sequence, optional): The number of bins or the specific bin edges.
-        range (tuple, optional): The range of values to consider for the histogram.
-        xlabel (str, optional): Label for the x-axis.
-        ylabel (str, optional): Label for the y-axis.
-        title (str, optional): Title for the histogram.
-        alpha (float, optional): Transparency of the bars (0.0 to 1.0).
-        color (str, optional): Color of the bars.
+        data : list or Series
+            The data to create the histogram from.
+        bins : int or sequence, optional
+            The number of bins or the specific bin edges.
+        range : tuple, optional
+            The range of values to consider for the histogram.
+        xlabel : str, optional
+            Label for the x-axis.
+        ylabel :str, optional
+            Label for the y-axis.
+        title : str, optional
+            Title for the histogram.
+        alpha : float, optional
+            Transparency of the bars (0.0 to 1.0).
+        color : str, optional
+            Color of the bars.
     """
     plt.hist(data, bins=bins, range=range, alpha=alpha, color=color, edgecolor=edgecolor)
 
